@@ -4,26 +4,35 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import items.*;
 
 public class GamePanel extends JPanel implements Runnable {
 
     static final int GAME_HEIGHT = 700;
-    static final int GAME_WIDTH = (int) (GAME_HEIGHT * (0.7777));
+    static final int GAME_WIDTH = 560;
     static final Dimension SCREEN_SIZE = new Dimension(GAME_WIDTH, GAME_HEIGHT);
     static final int BALL_DIAMETER = 20;
+    static final int BRICK_WIDTH = 70;
+    static final int BRICK_HEIGHT = 40;
     Thread gameThread;
     Graphics graphics;
     public int ball_count = 0;
     public int brick_number = 0;
     List<Ball> balls = new ArrayList<>();
-    public AL mouseAdapter; // Declare AL instance here
+    Set<Brick> bricks = new HashSet<>();
+    public AL mouseAdapter;
+    Score score;
 
     public GamePanel() {
         newBall();
+        newbrick();
+        score = new Score(GAME_WIDTH, GAME_HEIGHT);
         this.setFocusable(true);
-        mouseAdapter = new AL(balls, 4); // Initialize AL instance
+        mouseAdapter = new AL(balls, 10); // Initialize AL instance
         this.addMouseListener(mouseAdapter); // Use the same AL instance throughout
         this.setPreferredSize(SCREEN_SIZE);
         gameThread = new Thread(this);
@@ -49,7 +58,8 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void newbrick() {
-
+        bricks.add(new Brick(50, 280, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT));
+        bricks.add(new Brick(150, 120, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT));
     }
 
     public void run() {
@@ -81,6 +91,9 @@ public class GamePanel extends JPanel implements Runnable {
         for (Ball ball : balls) {
             ball.draw(g);
         }
+        for (Brick brick : bricks)
+            brick.draw(g);
+        score.draw(g);
     }
 
     public void move() {
@@ -91,19 +104,38 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void checkCollision() {
         for (Ball ball : balls) {
-            if (ball.y <= 0) {
-                ball.setYDirection(-ball.yVelocity);
-            }
-            if (ball.y >= GAME_HEIGHT - BALL_DIAMETER) {
-                ball.setY(GAME_HEIGHT - BALL_DIAMETER);
-                ball.setXDirection(0);
+            for (Brick brick : bricks) {
+                // boolean checkX = ball.x >= brick.x && ball.x <= brick.x + BRICK_WIDTH;
+                if (ball.y <= 50) {
+                    System.out.println("llll");
+                    ball.setYDirection(-ball.yVelocity);
+                }
+                if (ball.y >= GAME_HEIGHT - BALL_DIAMETER) {
+                    ball.setY(GAME_HEIGHT - BALL_DIAMETER);
+                    ball.setXDirection(0);
+                }
 
-            }
-            if (ball.x <= 0) {
-                ball.setXDirection(-ball.xVelocity);
-            }
-            if (ball.x >= GAME_WIDTH - BALL_DIAMETER) {
-                ball.setXDirection(-ball.xVelocity);
+                if (ball.x <= 0) {
+                    ball.setXDirection(-ball.xVelocity);
+                }
+                if (ball.x >= GAME_WIDTH - BALL_DIAMETER) {
+                    ball.setXDirection(-ball.xVelocity);
+                }
+
+                // BRICKS
+                // if (ball.y <= brick.y + BRICK_HEIGHT && checkX) {
+                // ball.setYDirection(-ball.yVelocity);
+                // }
+                // if (ball.y + BALL_DIAMETER <= brick.y && checkX) {
+                // ball.setYDirection(-ball.yVelocity);
+                // }
+
+                // if (ball.x < brick.x + BRICK_WIDTH) {
+                // ball.setXDirection(-ball.xVelocity);
+                // }
+                // if (ball.x + BALL_DIAMETER >= brick.x) {
+                // ball.setXDirection(-ball.xVelocity);
+                // }
             }
         }
     }
