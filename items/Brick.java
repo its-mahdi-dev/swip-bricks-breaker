@@ -10,11 +10,13 @@ public class Brick extends Rectangle {
 
     static int GAME_WIDTH;
     static int GAME_HEIGHT;
+    public int score = 1;
 
-    public Brick(int x, int y, int GAME_WIDTH, int GAME_HEIGHT, int BRICK_WIDTH, int BRICK_HEIGHT) {
+    public Brick(int x, int y, int GAME_WIDTH, int GAME_HEIGHT, int BRICK_WIDTH, int BRICK_HEIGHT, int score) {
         super(x, y, BRICK_WIDTH, BRICK_HEIGHT);
         Brick.GAME_WIDTH = GAME_WIDTH;
         Brick.GAME_HEIGHT = GAME_HEIGHT;
+        this.score = score;
     }
 
     public void draw(Graphics g) {
@@ -23,6 +25,6 @@ public class Brick extends Rectangle {
         g.fillRect(x, y, width, height);
         g.setColor(Color.white);
         g.setFont(new Font("Consolas", Font.PLAIN, 20));
-        g.drawString(String.valueOf(Score.score), x + (width / 2), y + (height / 2));
+        g.drawString(String.valueOf(score), x + (width / 2) - 7, y + (height / 2) + 7);
     }
 }

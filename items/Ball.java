@@ -6,8 +6,9 @@ import java.awt.Rectangle;
 import java.util.Random;
 
 public class Ball extends Rectangle {
-    public int xVelocity;
-    public int yVelocity;
+    public double xVelocity;
+    public double yVelocity;
+    public boolean isMoving;
 
     Random random;
     public int speed = 10;
@@ -22,11 +23,11 @@ public class Ball extends Rectangle {
 
     }
 
-    public void setYDirection(int yDirection) {
+    public void setYDirection(double yDirection) {
         yVelocity = yDirection;
     }
 
-    public void setXDirection(int xDirection) {
+    public void setXDirection(double xDirection) {
         xVelocity = xDirection;
     }
 
@@ -39,8 +40,8 @@ public class Ball extends Rectangle {
     }
 
     public void move() {
-        x = x + xVelocity;
-        y = y + yVelocity;
+        x += xVelocity;
+        y += yVelocity;
 
         // System.out.println(x + " " + y);
     }
