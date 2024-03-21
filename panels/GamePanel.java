@@ -34,10 +34,12 @@ public class GamePanel extends JPanel implements Runnable {
     private Timer timer;
     public int timeCount = 0;
     int brickScore = 1;
+    List<ItemBall> itemBalls = new ArrayList<>();
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
         newBall();
+        newItemBall();
         generateRandomBrick();
         this.setFocusable(true);
         mouseAdapter = new AL(balls, 10);
@@ -66,6 +68,10 @@ public class GamePanel extends JPanel implements Runnable {
                 score.score + 1));
         bricks.add(new Brick(420, 120, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH,
                 BRICK_HEIGHT, generateRandomColor(), score.score));
+    }
+
+    public void newItemBall() {
+        itemBalls.add(new ItemBall(200, 200, 20, 20));
     }
 
     public void run() {
@@ -100,6 +106,9 @@ public class GamePanel extends JPanel implements Runnable {
         for (Brick brick : bricks)
             brick.draw(g);
         score.draw(g);
+        for (ItemBall itemBall : itemBalls) {
+            itemBall.draw(g);
+        }
         if (!isMoving && mousePosition.y < GAME_HEIGHT - 50) {
             Ball ball = balls.get(0);
             int ballCenterX = ball.x + ball.width / 2;
