@@ -109,7 +109,7 @@ public class GamePanel extends JPanel implements Runnable {
         for (Brick brick : bricks)
             brick.draw(g);
         score.draw(g);
-        if (!isMoving) {
+        if (!isMoving && mousePosition.y < GAME_HEIGHT - 50) {
             Ball ball = balls.get(0);
             int ballCenterX = ball.x + ball.width / 2;
             int ballCenterY = ball.y + ball.height / 2;
@@ -153,12 +153,11 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void checkCollision() {
-        // System.out.println(isMoving);
         int count = 0;
         for (int i = 0; i < balls.size(); i++) {
             Ball ball = balls.get(i);
             ball.isMoving = true;
-            if (ball.y <= 50) {
+            if (ball.y <= 50 && ball.yVelocity < 0) {
                 ball.setYDirection(-ball.yVelocity);
             }
             if (ball.y >= GAME_HEIGHT - BALL_DIAMETER && isMoving) {
@@ -181,40 +180,47 @@ public class GamePanel extends JPanel implements Runnable {
             if (ball.x >= GAME_WIDTH - BALL_DIAMETER) {
                 ball.setXDirection(-ball.xVelocity);
             }
+            if (ball.xVelocity <= 10.1 && ball.xVelocity >= 9.95) {
+                ball.xVelocity--;
+            }
             if (!ball.isMoving)
                 count++;
 
             // BRICKS
             for (Brick brick : bricks) {
-
+                if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
+                    // System.out.println("finished");
+                }
                 boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
                         && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
                 boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y
                         && ball.y + (BALL_DIAMETER / 2) <= brick.y + BRICK_HEIGHT;
-                if (ball.y - (brick.y + BRICK_HEIGHT) <= 0 && ball.y - (brick.y + BRICK_HEIGHT) >= -BRICK_HEIGHT / 5
+                if ((ball.y == brick.y + BRICK_HEIGHT || (ball.y - (brick.y + BRICK_HEIGHT) <= 0
+                        && ball.y - (brick.y + BRICK_HEIGHT) >= -BRICK_HEIGHT / 5))
                         && checkX) {
                     ball.setYDirection(-ball.yVelocity);
                     brick.score--;
                     score.score++;
                 }
-                if (brick.y - (ball.y + BALL_DIAMETER) <= 0 && brick.y - (ball.y + BALL_DIAMETER) >= -BRICK_HEIGHT / 5
+                if ((ball.y + BALL_DIAMETER == brick.y || (brick.y - (ball.y + BALL_DIAMETER) <= 0
+                        && brick.y - (ball.y + BALL_DIAMETER) >= -BRICK_HEIGHT / 5))
                         && checkX) {
                     ball.setYDirection(-ball.yVelocity);
                     brick.score--;
                     score.score++;
                 }
 
-                if (ball.x - (brick.x + BRICK_WIDTH) <= 0 && ball.x - (brick.x + BRICK_WIDTH) >= -BRICK_WIDTH / 5
+                if ((ball.x == brick.x + BRICK_WIDTH || (ball.x - (brick.x + BRICK_WIDTH) <= 0
+                        && ball.x - (brick.x + BRICK_WIDTH) >= -BRICK_WIDTH / 5))
                         && checkY) {
                     ball.setXDirection(-ball.xVelocity);
                     brick.score--;
-                    score.score++;
                 }
-                if (brick.x - (ball.x + BALL_DIAMETER) <= 0 && brick.x - (ball.x + BALL_DIAMETER) >= -BRICK_WIDTH / 5
+                if ((ball.x + BALL_DIAMETER == brick.x || (brick.x - (ball.x + BALL_DIAMETER) <= 0
+                        && brick.x - (ball.x + BALL_DIAMETER) >= -BRICK_WIDTH / 5))
                         && checkY) {
                     ball.setXDirection(-ball.xVelocity);
                     brick.score--;
-                    score.score++;
                 }
                 if (brick.score <= 0)
                     removeBrick = brick;
@@ -227,7 +233,11 @@ public class GamePanel extends JPanel implements Runnable {
         if (count == balls.size()) {
             if (isMoving) {
                 moveBricksDown(BRICK_HEIGHT);
+                score.score++;
                 generateRandomBrick();
+                balls.add(
+                        new Ball(finalX, (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
+                                BALL_DIAMETER));
             }
             isMoving = false;
             moveBricksDown(1);
@@ -270,9 +280,11 @@ public class GamePanel extends JPanel implements Runnable {
         @Override
         public void mousePressed(MouseEvent e) {
             if (!isMoving) {
-                setDirection(e.getX(), e.getY());
-                isMoving = true;
-                finalX = null;
+                if (e.getY() < GAME_HEIGHT - 50) {
+                    setDirection(e.getX(), e.getY());
+                    isMoving = true;
+                    finalX = null;
+                }
             }
         }
     }
@@ -280,16 +292,18 @@ public class GamePanel extends JPanel implements Runnable {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // Draw the balls
+
         for (Ball ball : balls) {
             ball.draw(g);
         }
 
-        // Draw line from ball to mouse pointer
         for (Ball ball : balls) {
             int ballCenterX = ball.x + ball.width / 2;
             int ballCenterY = ball.y + ball.height / 2;
-            g.drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
+
+            if (mousePosition.y < GAME_HEIGHT - 50) {
+                // g drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
+            }
         }
     }
 
