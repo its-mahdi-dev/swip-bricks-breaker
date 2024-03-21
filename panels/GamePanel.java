@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import items.*;
+import panels.GamePanel.AL;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -23,7 +24,7 @@ public class GamePanel extends JPanel implements Runnable {
     public int ball_count = 0;
     public int brick_number = 0;
     List<Ball> balls = new ArrayList<>();
-    Set<Brick> bricks = new HashSet<>();
+    List<Brick> bricks = new ArrayList<>();
     public AL mouseAdapter;
     private Score score;
     private Point mousePosition;
@@ -36,15 +37,15 @@ public class GamePanel extends JPanel implements Runnable {
         newBall();
         newbrick();
         this.setFocusable(true);
-        mouseAdapter = new AL(balls, 10); // Initialize AL instance
-        this.addMouseListener(mouseAdapter); // Use the same AL instance throughout
+        mouseAdapter = new AL(balls, 10);
+        this.addMouseListener(mouseAdapter);
         this.setPreferredSize(SCREEN_SIZE);
-        mousePosition = new Point(0, 0); // Initialize mouse position
+        mousePosition = new Point(0, 0);
         this.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                mousePosition = e.getPoint(); // Update mouse position on mouse movement
-                repaint(); // Repaint the panel on mouse movement
+                mousePosition = e.getPoint();
+                repaint();
             }
         });
         gameThread = new Thread(this);
@@ -70,9 +71,10 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void newbrick() {
-        bricks.add(new Brick(50, 280, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT, score.score + 1));
-        // bricks.add(new Brick(150, 120, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH,
-        // BRICK_HEIGHT));
+        bricks.add(new Brick(70, 280, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT, generateRandomColor(),
+                score.score + 1));
+        bricks.add(new Brick(420, 120, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH,
+                BRICK_HEIGHT, generateRandomColor(), score.score + 1));
     }
 
     public void run() {
@@ -121,6 +123,35 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    private void moveBricksDown(double dy) {
+        for (int i = 0; i < bricks.size(); i++) {
+            Brick brick = bricks.get(i);
+            brick.y += dy;
+        }
+    }
+
+    private Color generateRandomColor() {
+        int r = (int) (Math.random() * 256); // Red component
+        int g = (int) (Math.random() * 256); // Green component
+        int b = (int) (Math.random() * 256); // Blue component
+        return new Color(r, g, b);
+    }
+
+    private void generateRandomBrick() {
+        int random = (int) (Math.random() * 8);
+        if (random == 0) {
+            random++;
+        }
+        for (int i = 0; i < random; i++) {
+            int brickX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            int brickY = 50;
+            System.out.println(brickX);
+            bricks.add(new Brick(brickX, brickY, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
+                    generateRandomColor(), score.score + 1));
+        }
+
+    }
+
     public void checkCollision() {
         // System.out.println(isMoving);
         int count = 0;
@@ -155,6 +186,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             // BRICKS
             for (Brick brick : bricks) {
+
                 boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
                         && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
                 boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y
@@ -192,8 +224,15 @@ public class GamePanel extends JPanel implements Runnable {
                 removeBrick = null;
             }
         }
-        if (count == balls.size())
+        if (count == balls.size()) {
+            if (isMoving) {
+                moveBricksDown(BRICK_HEIGHT);
+                generateRandomBrick();
+            }
             isMoving = false;
+            moveBricksDown(1);
+            count = 0;
+        }
     }
 
     public class AL extends MouseAdapter {
