@@ -35,12 +35,15 @@ public class GamePanel extends JPanel implements Runnable {
     public int timeCount = 0;
     int brickScore = 1;
     List<ItemBall> itemBalls = new ArrayList<>();
+    List<Integer> generatedXPositions = new ArrayList<>();
+    ItemBall removedItemBall;
+    boolean addBall = false;
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
         newBall();
-        newItemBall();
         generateRandomBrick();
+        generateItemBall();
         this.setFocusable(true);
         mouseAdapter = new AL(balls, 10);
         this.addMouseListener(mouseAdapter);
@@ -129,6 +132,10 @@ public class GamePanel extends JPanel implements Runnable {
             Brick brick = bricks.get(i);
             brick.y += dy;
         }
+        for (int i = 0; i < itemBalls.size(); i++) {
+            ItemBall itemBall = itemBalls.get(i);
+            itemBall.y += dy;
+        }
     }
 
     private Color generateRandomColor() {
@@ -139,16 +146,29 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void generateRandomBrick() {
+        generatedXPositions = new ArrayList<>();
         int random = (int) (Math.random() * 8);
         if (random == 0) {
             random++;
         }
         for (int i = 0; i < random; i++) {
             int brickX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            generatedXPositions.add(brickX);
             int brickY = 50;
             bricks.add(new Brick(brickX, brickY, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
                     generateRandomColor(), brickScore));
         }
+
+    }
+
+    private void generateItemBall() {
+        int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+        while (generatedXPositions.contains(itemBallX)) {
+            itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+        }
+        itemBallX += BRICK_WIDTH / 2 - 10;
+        int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
+        itemBalls.add(new ItemBall(itemBallX, itemBallY, 20, 20));
 
     }
 
@@ -232,15 +252,38 @@ public class GamePanel extends JPanel implements Runnable {
                 bricks.remove(removeBrick);
                 removeBrick = null;
             }
+
+            // itemBalls
+            for (ItemBall itemBall : itemBalls) {
+                if (ball.x + BALL_DIAMETER >= itemBall.x && ball.x <= itemBall.x + 20
+                        && ball.y + BALL_DIAMETER >= itemBall.y
+                        && ball.y <= itemBall.y + 20) {
+                    removedItemBall = itemBall;
+                    addBall = true;
+
+                }
+            }
+
+            if (removedItemBall != null) {
+                itemBalls.remove(removedItemBall);
+                removedItemBall = null;
+            }
         }
         if (count == balls.size()) {
             if (isMoving) {
                 moveBricksDown(BRICK_HEIGHT);
                 brickScore += (int) (Math.random() * 10);
                 generateRandomBrick();
+                generateItemBall();
                 balls.add(
                         new Ball(finalX, (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
                                 BALL_DIAMETER));
+                if (addBall) {
+                    balls.add(
+                            new Ball(finalX, (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
+                                    BALL_DIAMETER));
+                    addBall = false;
+                }
             }
             isMoving = false;
             moveBricksDown(1);
