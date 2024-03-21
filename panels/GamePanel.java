@@ -31,6 +31,8 @@ public class GamePanel extends JPanel implements Runnable {
     Brick removeBrick;
     boolean isMoving = false;
     Integer finalX = null;
+    private Timer timer;
+    public int timeCount = 0;
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
@@ -103,6 +105,7 @@ public class GamePanel extends JPanel implements Runnable {
             int ballCenterY = ball.y + ball.height / 2;
             g.drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
         }
+
     }
 
     public void move() {
@@ -231,6 +234,16 @@ public class GamePanel extends JPanel implements Runnable {
             moveBricksDown(1);
             count = 0;
         }
+
+        if (timer == null) {
+            timer = new Timer(1000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    score.time++;
+                }
+            });
+        }
+        timer.start();
     }
 
     public class AL extends MouseAdapter {
