@@ -16,7 +16,7 @@ public class GamePanel extends JPanel implements Runnable {
     static final int GAME_HEIGHT = 700;
     static final int GAME_WIDTH = 560;
     static final Dimension SCREEN_SIZE = new Dimension(GAME_WIDTH, GAME_HEIGHT);
-    static final int BALL_DIAMETER = 20;
+    static final int BALL_DIAMETER = 15;
     static final int BRICK_WIDTH = 70;
     static final int BRICK_HEIGHT = 40;
     Thread gameThread;
@@ -56,25 +56,13 @@ public class GamePanel extends JPanel implements Runnable {
         balls.add(
                 new Ball((GAME_WIDTH / 2) - (BALL_DIAMETER / 2), (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
                         BALL_DIAMETER));
-        balls.add(
-                new Ball((GAME_WIDTH / 2) - (BALL_DIAMETER / 2), (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                        BALL_DIAMETER));
-        balls.add(
-                new Ball((GAME_WIDTH / 2) - (BALL_DIAMETER / 2), (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                        BALL_DIAMETER));
-        balls.add(
-                new Ball((GAME_WIDTH / 2) - (BALL_DIAMETER / 2), (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                        BALL_DIAMETER));
-        balls.add(
-                new Ball((GAME_WIDTH / 2) - (BALL_DIAMETER / 2), (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                        BALL_DIAMETER));
     }
 
     public void newbrick() {
         bricks.add(new Brick(70, 280, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT, generateRandomColor(),
                 score.score + 1));
         bricks.add(new Brick(420, 120, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH,
-                BRICK_HEIGHT, generateRandomColor(), score.score + 1));
+                BRICK_HEIGHT, generateRandomColor(), score.score));
     }
 
     public void run() {
@@ -145,9 +133,8 @@ public class GamePanel extends JPanel implements Runnable {
         for (int i = 0; i < random; i++) {
             int brickX = (int) (Math.random() * 8) * BRICK_WIDTH;
             int brickY = 50;
-            System.out.println(brickX);
             bricks.add(new Brick(brickX, brickY, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
-                    generateRandomColor(), score.score + 1));
+                    generateRandomColor(), score.score));
         }
 
     }
@@ -191,37 +178,38 @@ public class GamePanel extends JPanel implements Runnable {
                 if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
                     // System.out.println("finished");
                 }
+                // boolean checkX = ball.x + BALL_DIAMETER >= brick.x && ball.x <= brick.x +
+                // BRICK_WIDTH;
+                // boolean checkY = ball.y + BALL_DIAMETER >= brick.y && ball.y <= brick.y +
+                // BRICK_HEIGHT;
+
                 boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
                         && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
                 boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y
                         && ball.y + (BALL_DIAMETER / 2) <= brick.y + BRICK_HEIGHT;
-                if ((ball.y == brick.y + BRICK_HEIGHT || (ball.y - (brick.y + BRICK_HEIGHT) <= 0
-                        && ball.y - (brick.y + BRICK_HEIGHT) >= -BRICK_HEIGHT / 5))
+
+                boolean checkTop = ball.y + BALL_DIAMETER >= brick.y
+                        && ball.y + BALL_DIAMETER < brick.y + BRICK_HEIGHT / 2
+                        && ball.yVelocity > 0;
+                boolean checkBottom = ball.y <= brick.y + BRICK_HEIGHT && ball.y > brick.y + BRICK_HEIGHT / 2
+                        && ball.yVelocity < 0;
+                if ((checkTop || checkBottom)
                         && checkX) {
                     ball.setYDirection(-ball.yVelocity);
                     brick.score--;
-                    score.score++;
-                }
-                if ((ball.y + BALL_DIAMETER == brick.y || (brick.y - (ball.y + BALL_DIAMETER) <= 0
-                        && brick.y - (ball.y + BALL_DIAMETER) >= -BRICK_HEIGHT / 5))
-                        && checkX) {
-                    ball.setYDirection(-ball.yVelocity);
-                    brick.score--;
-                    score.score++;
                 }
 
-                if ((ball.x == brick.x + BRICK_WIDTH || (ball.x - (brick.x + BRICK_WIDTH) <= 0
-                        && ball.x - (brick.x + BRICK_WIDTH) >= -BRICK_WIDTH / 5))
+                boolean checkLeft = ball.x + BALL_DIAMETER >= brick.x
+                        && ball.x + BALL_DIAMETER < brick.x + BRICK_WIDTH / 2 && ball.xVelocity > 0;
+                boolean checkRight = ball.x <= brick.x + BRICK_WIDTH && ball.x > brick.x + BRICK_WIDTH / 2
+                        && ball.xVelocity < 0;
+
+                if ((checkLeft || checkRight)
                         && checkY) {
                     ball.setXDirection(-ball.xVelocity);
                     brick.score--;
                 }
-                if ((ball.x + BALL_DIAMETER == brick.x || (brick.x - (ball.x + BALL_DIAMETER) <= 0
-                        && brick.x - (ball.x + BALL_DIAMETER) >= -BRICK_WIDTH / 5))
-                        && checkY) {
-                    ball.setXDirection(-ball.xVelocity);
-                    brick.score--;
-                }
+
                 if (brick.score <= 0)
                     removeBrick = brick;
             }

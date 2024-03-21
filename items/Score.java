@@ -8,7 +8,7 @@ import java.awt.Rectangle;
 public class Score extends Rectangle {
     static int GAME_WIDTH;
     static int GAME_HEIGHT;
-    public int score = 0;
+    public int score = 1;
 
     public Score(int GAME_WIDTH, int GAME_HEIGHT) {
         Score.GAME_WIDTH = GAME_WIDTH;
