@@ -35,8 +35,15 @@ public class GamePanel extends JPanel implements Runnable {
     public int timeCount = 0;
     int brickScore = 1;
     List<ItemBall> itemBalls = new ArrayList<>();
+    List<ItemSpeed> itemSpeeds = new ArrayList<>();
+    List<ItemPower> itemPowers = new ArrayList<>();
+    List<ItemConfused> itemConfuseds = new ArrayList<>();
     List<Integer> generatedXPositions = new ArrayList<>();
     ItemBall removedItemBall;
+    ItemConfused removedItemConfused;
+    ItemPower removedItemPower;
+    ItemSpeed removedItemSpeed;
+    Integer speedTimer;
     boolean addBall = false;
 
     public GamePanel() {
@@ -112,6 +119,15 @@ public class GamePanel extends JPanel implements Runnable {
         for (ItemBall itemBall : itemBalls) {
             itemBall.draw(g);
         }
+        for (ItemSpeed itemSpeed : itemSpeeds) {
+            itemSpeed.draw(g);
+        }
+        for (ItemPower itemPower : itemPowers) {
+            itemPower.draw(g);
+        }
+        for (ItemConfused itemConfused : itemConfuseds) {
+            itemConfused.draw(g);
+        }
         if (!isMoving && mousePosition.y < GAME_HEIGHT - 50) {
             Ball ball = balls.get(0);
             int ballCenterX = ball.x + ball.width / 2;
@@ -135,6 +151,18 @@ public class GamePanel extends JPanel implements Runnable {
         for (int i = 0; i < itemBalls.size(); i++) {
             ItemBall itemBall = itemBalls.get(i);
             itemBall.y += dy;
+        }
+        for (int i = 0; i < itemSpeeds.size(); i++) {
+            ItemSpeed itemSpeed = itemSpeeds.get(i);
+            itemSpeed.y += dy;
+        }
+        for (int i = 0; i < itemPowers.size(); i++) {
+            ItemPower itemPower = itemPowers.get(i);
+            itemPower.y += dy;
+        }
+        for (int i = 0; i < itemConfuseds.size(); i++) {
+            ItemConfused itemConfused = itemConfuseds.get(i);
+            itemConfused.y += dy;
         }
     }
 
@@ -166,14 +194,54 @@ public class GamePanel extends JPanel implements Runnable {
         while (generatedXPositions.contains(itemBallX)) {
             itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
         }
+        generatedXPositions.add(itemBallX);
         itemBallX += BRICK_WIDTH / 2 - 10;
+
         int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
         itemBalls.add(new ItemBall(itemBallX, itemBallY, 20, 20));
 
     }
 
+    private void generateOtherItems() {
+        System.out.println(score.time);
+        if (score.time % 6 == 0) {
+            int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            while (generatedXPositions.contains(itemBallX)) {
+                itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            }
+            generatedXPositions.add(itemBallX);
+            itemBallX += BRICK_WIDTH / 2 - 10;
+            int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
+            itemSpeeds.add(new ItemSpeed(itemBallX, itemBallY, 20, 20));
+        } else if (score.time % 5 == 0) {
+            int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            while (generatedXPositions.contains(itemBallX)) {
+                itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            }
+            generatedXPositions.add(itemBallX);
+            itemBallX += BRICK_WIDTH / 2 - 10;
+            int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
+            itemPowers.add(new ItemPower(itemBallX, itemBallY, 20, 20));
+        } else if (score.time % 7 == 0) {
+            int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            while (generatedXPositions.contains(itemBallX)) {
+                itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            }
+            generatedXPositions.add(itemBallX);
+            itemBallX += BRICK_WIDTH / 2 - 10;
+            int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
+            itemConfuseds.add(new ItemConfused(itemBallX, itemBallY, 20, 20));
+        }
+    }
+
     public void checkCollision() {
         int count = 0;
+        if (speedTimer != null) {
+            if (speedTimer <= score.time) {
+                speedTimer = null;
+                mouseAdapter.speed /= 2;
+            }
+        }
         for (int i = 0; i < balls.size(); i++) {
             Ball ball = balls.get(i);
             ball.isMoving = true;
@@ -268,6 +336,24 @@ public class GamePanel extends JPanel implements Runnable {
                 itemBalls.remove(removedItemBall);
                 removedItemBall = null;
             }
+
+            // itemSpeed
+            for (ItemSpeed itemSpeed : itemSpeeds) {
+                if (ball.x + BALL_DIAMETER >= itemSpeed.x && ball.x <= itemSpeed.x + 20
+                        && ball.y + BALL_DIAMETER >= itemSpeed.y
+                        && ball.y <= itemSpeed.y + 20) {
+
+                    if (speedTimer == null) {
+                        speedTimer = score.time + 10;
+                        mouseAdapter.speed *= 2;
+                    }
+                    removedItemSpeed = itemSpeed;
+                }
+            }
+            if (removedItemSpeed != null) {
+                itemSpeeds.remove(removedItemSpeed);
+                removedItemSpeed = null;
+            }
         }
         if (count == balls.size()) {
             if (isMoving) {
@@ -275,6 +361,7 @@ public class GamePanel extends JPanel implements Runnable {
                 brickScore += (int) (Math.random() * 10);
                 generateRandomBrick();
                 generateItemBall();
+                generateOtherItems();
                 balls.add(
                         new Ball(finalX, (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
                                 BALL_DIAMETER));
@@ -287,6 +374,7 @@ public class GamePanel extends JPanel implements Runnable {
             }
             isMoving = false;
             moveBricksDown(1);
+
             count = 0;
         }
 
@@ -303,7 +391,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public class AL extends MouseAdapter {
         private List<Ball> balls;
-        private double speed;
+        public double speed;
 
         public AL(List<Ball> balls, double speed) {
             this.balls = balls;
