@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import items.*;
 import panels.GamePanel.AL;
@@ -20,6 +23,9 @@ public class GamePanel extends JPanel implements Runnable {
     static final int BRICK_WIDTH = 70;
     static final int BRICK_HEIGHT = 40;
     Thread gameThread;
+    private  ScheduledExecutorService brickExecutor = Executors.newSingleThreadScheduledExecutor();
+    private double brickMoveSpeed = 0.1;
+    private boolean isBrickExecutorRunning = false;
     Graphics graphics;
     public int ball_count = 0;
     public int brick_number = 0;
@@ -45,6 +51,7 @@ public class GamePanel extends JPanel implements Runnable {
     ItemSpeed removedItemSpeed;
     Integer speedTimer;
     boolean addBall = false;
+    private double brickDownDY = 1;
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
@@ -65,6 +72,24 @@ public class GamePanel extends JPanel implements Runnable {
         });
         gameThread = new Thread(this);
         gameThread.start();
+
+        startMovingBricks();
+
+    }
+
+    private void startMovingBricks() {
+        if (!isBrickExecutorRunning) {
+            brickExecutor = Executors.newSingleThreadScheduledExecutor();
+            brickExecutor.scheduleAtFixedRate(this::moveBricksDown, 0, 100, TimeUnit.MILLISECONDS);
+            isBrickExecutorRunning = true;
+        }
+    }
+
+    public void stopMovingBricks() {
+        if (isBrickExecutorRunning) {
+            brickExecutor.shutdown(); // Shutdown the executor service
+            isBrickExecutorRunning = false;
+        }
     }
 
     public void newBall() {
@@ -143,7 +168,9 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    private void moveBricksDown(double dy) {
+    private void moveBricksDown() {
+        double dy = brickDownDY;
+        System.out.println("dy" + dy + " -> " + brickDownDY);
         for (int i = 0; i < bricks.size(); i++) {
             Brick brick = bricks.get(i);
             brick.y += dy;
@@ -164,6 +191,8 @@ public class GamePanel extends JPanel implements Runnable {
             ItemConfused itemConfused = itemConfuseds.get(i);
             itemConfused.y += dy;
         }
+
+        repaint();
     }
 
     private Color generateRandomColor() {
@@ -357,8 +386,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
         if (count == balls.size()) {
             if (isMoving) {
-                moveBricksDown(BRICK_HEIGHT);
                 brickScore += (int) (Math.random() * 10);
+                startMovingBricks();
+                brickDownDY = BRICK_HEIGHT;
+                moveBricksDown();
                 generateRandomBrick();
                 generateItemBall();
                 generateOtherItems();
@@ -373,8 +404,7 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
             isMoving = false;
-            moveBricksDown(1);
-
+            brickDownDY = 1;
             count = 0;
         }
 
@@ -428,6 +458,7 @@ public class GamePanel extends JPanel implements Runnable {
                     setDirection(e.getX(), e.getY());
                     isMoving = true;
                     finalX = null;
+                    stopMovingBricks();
                 }
             }
         }
