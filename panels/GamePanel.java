@@ -277,7 +277,9 @@ public class GamePanel extends JPanel implements Runnable {
                 case "color":
                     colorTimer = score.time + 10;
                     break;
-
+                case "earthQuake":
+                    earthQuakeTimer = score.time + 10;
+                    break;
                 default:
                     break;
             }
@@ -348,6 +350,17 @@ public class GamePanel extends JPanel implements Runnable {
                         colorTimer = null;
                     }
                 }
+                if (earthQuakeTimer != null) {
+                    if (earthQuakeTimer >= score.time) {
+                        int newWidth = (int) (Math.sin(System.currentTimeMillis() * 0.003) * 20) + BRICK_WIDTH;
+                        int newHeight = (int) (Math.cos(System.currentTimeMillis() * 0.003) * 20) + BRICK_HEIGHT;
+                        brick.width = newWidth;
+                        brick.height = newHeight;
+                    } else {
+                        earthQuakeTimer = null;
+                    }
+                }
+
                 boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
                         && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
                 boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y

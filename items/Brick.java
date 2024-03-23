@@ -15,6 +15,7 @@ public class Brick extends Rectangle {
     public int finalScore = 1;
     public Color color;
     public String specialItem;
+    public int widthChange;
 
     public Brick(int x, int y, int GAME_WIDTH, int GAME_HEIGHT, int BRICK_WIDTH, int BRICK_HEIGHT, Color color,
             int score) {
