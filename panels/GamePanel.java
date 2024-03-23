@@ -357,8 +357,14 @@ public class GamePanel extends JPanel implements Runnable {
                         brick.width = newWidth;
                         brick.height = newHeight;
                     } else {
+                        brick.width = BRICK_WIDTH;
+                        brick.height = BRICK_HEIGHT;
                         earthQuakeTimer = null;
                     }
+                } else {
+
+                    brick.width = BRICK_WIDTH;
+                    brick.height = BRICK_HEIGHT;
                 }
 
                 boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
@@ -375,9 +381,9 @@ public class GamePanel extends JPanel implements Runnable {
                         && checkX) {
                     ball.setYDirection(-ball.yVelocity);
                     int sss = brick.score;
-                    System.out.println("t1 -> " + sss);
+                    // System.out.println("t1 -> " + sss);
                     brick.score -= powerScore;
-                    System.out.println("t22 -> " + brick.score);
+                    // System.out.println("t22 -> " + brick.score);
                     if (sss == brick.score)
                         System.out.println("top or bottom");
                 }
@@ -391,9 +397,9 @@ public class GamePanel extends JPanel implements Runnable {
                         && checkY) {
                     ball.setXDirection(-ball.xVelocity);
                     int sss = brick.score;
-                    System.out.println("r1 -> " + sss);
+                    // System.out.println("r1 -> " + sss);
                     brick.score -= powerScore;
-                    System.out.println("r22 -> " + brick.score);
+                    // System.out.println("r22 -> " + brick.score);
                     if (sss == brick.score)
                         System.out.println("left or right");
 
@@ -522,30 +528,23 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         public void setDirection(int mouseX, int mouseY) {
-            double xVelocity = 0;
-            double yVelocity = 0;
-            int ballX = balls.get(0).x + balls.get(0).width / 2;
-            int ballY = balls.get(0).y + balls.get(0).height / 2;
-
-            double angle = Math.atan2(mouseY - ballY, mouseX - ballX);
-
-            xVelocity = Math.cos(angle) * speed;
-            yVelocity = Math.sin(angle) * speed;
+            int selectedY = mouseY;
+            int selectedX = mouseX;
             if (isConfused) {
                 Random random = new Random();
-                double xRandom = -10.0 + (20.0 * random.nextDouble());
-                double yRandom = -10.0 + (20.0 * random.nextDouble());
-                xVelocity = xRandom;
-                yVelocity = yRandom;
-                isConfused = false;
+                selectedX = random.nextInt(GAME_WIDTH - 10) + 5;
+                selectedY = random.nextInt(GAME_HEIGHT - 30) + 100;
             }
+            int ballX = balls.get(0).x + balls.get(0).width / 2;
+            int ballY = balls.get(0).y + balls.get(0).height / 2;
+            double angle = Math.atan2(selectedY - ballY, selectedX - ballX);
+            double xVelocity = Math.cos(angle) * speed;
+            double yVelocity = Math.sin(angle) * speed;
             for (Ball ball : balls) {
 
                 ball.xVelocity = xVelocity;
                 ball.yVelocity = yVelocity;
-                System.out.println(xVelocity + " " + yVelocity);
                 repaint();
-
                 try {
                     Thread.sleep(400 / (int) speed);
                 } catch (InterruptedException ex) {
