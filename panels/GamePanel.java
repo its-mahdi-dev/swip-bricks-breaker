@@ -56,6 +56,8 @@ public class GamePanel extends JPanel implements Runnable {
     int powerScore = 1;
     Integer powerTimer;
     boolean isConfused = false;
+    Integer colorTimer;
+    Integer earthQuakeTimer;
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
@@ -269,6 +271,19 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    private void setSpecialItems(String specialItem) {
+        if (specialItem != null) {
+            switch (specialItem) {
+                case "color":
+                    colorTimer = score.time + 10;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
     public void checkCollision() {
         int count = 0;
         if (speedTimer != null) {
@@ -284,8 +299,10 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
         for (int i = 0; i < balls.size(); i++) {
+
             Ball ball = balls.get(i);
             ball.isMoving = true;
+
             if (ball.y <= 50 && ball.yVelocity < 0) {
                 ball.setYDirection(-ball.yVelocity);
             }
@@ -324,7 +341,13 @@ public class GamePanel extends JPanel implements Runnable {
                 // BRICK_WIDTH;
                 // boolean checkY = ball.y + BALL_DIAMETER >= brick.y && ball.y <= brick.y +
                 // BRICK_HEIGHT;
-
+                if (colorTimer != null) {
+                    if (colorTimer >= score.time) {
+                        brick.color = generateRandomColor();
+                    } else {
+                        colorTimer = null;
+                    }
+                }
                 boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
                         && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
                 boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y
@@ -370,6 +393,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             }
             if (removeBrick != null) {
+                setSpecialItems(removeBrick.specialItem);
                 bricks.remove(removeBrick);
                 removeBrick = null;
             }
