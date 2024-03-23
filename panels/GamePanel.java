@@ -145,8 +145,8 @@ public class GamePanel extends JPanel implements Runnable {
         for (Ball ball : copyOfBalls) {
             ball.draw(g);
         }
-        for (Brick brick : bricks) {
-            brick.draw(g);
+        for (int i = 0; i < bricks.size(); i++) {
+            bricks.get(i).draw(g);
         }
         score.draw(g);
         for (ItemBall itemBall : itemBalls) {
@@ -270,7 +270,15 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    private void setSpecialItems(String specialItem) {
+    private void setBombItem(Brick brick) {
+        List<Brick> bricksAround = getBricksAround(brick);
+        for (Brick b : bricksAround) {
+            b.score--;
+        }
+    }
+
+    private void setSpecialItems(Brick brick) {
+        String specialItem = brick.specialItem;
         if (specialItem != null) {
             switch (specialItem) {
                 case "color":
@@ -279,10 +287,33 @@ public class GamePanel extends JPanel implements Runnable {
                 case "earthQuake":
                     earthQuakeTimer = score.time + 10;
                     break;
+                case "bomb":
+                    setBombItem(brick);
+                    break;
                 default:
                     break;
             }
         }
+    }
+
+    public List<Brick> getBricksAround(Brick targetBrick) {
+        List<Brick> bricksAround = new ArrayList<>();
+
+        Point targetCenter = new Point(targetBrick.x + targetBrick.width / 2, targetBrick.y + targetBrick.height / 2);
+
+        for (Brick brick : bricks) {
+            if (brick != targetBrick) {
+                Point brickCenter = new Point(brick.x + brick.width / 2, brick.y + brick.height / 2);
+
+                double distance = targetCenter.distance(brickCenter);
+
+                if (distance <= 150) {
+                    bricksAround.add(brick);
+                }
+            }
+        }
+
+        return bricksAround;
     }
 
     public void checkCollision() {
@@ -405,7 +436,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             }
             if (removeBrick != null) {
-                setSpecialItems(removeBrick.specialItem);
+                setSpecialItems(removeBrick);
                 bricks.remove(removeBrick);
                 removeBrick = null;
             }
@@ -478,11 +509,12 @@ public class GamePanel extends JPanel implements Runnable {
         }
         if (count == balls.size()) {
             if (isMoving) {
-                for (Brick brick : bricks) {
-                    System.out.println("x: " + brick.x + " y: " + brick.y + " score: " + brick.score);
-                    brick.draw(graphics);
-                }
-                System.out.println("count: " + bricks.size());
+                // for (int k = 0; k < bricks.size(); k++) {
+                // System.out.println(
+                // "x: " + bricks.get(k).x + " y: " + bricks.get(k).y + "score: " +
+                // bricks.get(k).score);
+                // }
+                // System.out.println("count: " + bricks.size());
                 brickScore += (int) (Math.random() * 10);
                 startMovingBricks();
                 brickDownDY = BRICK_HEIGHT;

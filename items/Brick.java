@@ -32,7 +32,7 @@ public class Brick extends Rectangle {
         } else if (randomNumber % 8 == 0) {
             this.specialItem = "earthQuake";
             System.out.println("earth");
-        } else if (randomNumber % 9 == 0) {
+        } else if (randomNumber % 2 == 0) {
             this.specialItem = "bomb";
         }
     }
@@ -45,17 +45,24 @@ public class Brick extends Rectangle {
     }
 
     public void draw(Graphics g) {
-        if (specialItem == "color") {
+        specialItem = specialItem == null ? "" : specialItem;
+        if (specialItem.equals("color")) {
             color = generateRandomColor();
         }
         g.setColor(color);
+        if (specialItem.equals("bomb")) {
+            g.setColor(Color.black);
+        }
         g.fillRect(x, y, width, height);
+
         g.setColor(Color.white);
-        if (specialItem == "earthQuake") {
+
+        if (specialItem.equals("earthQuake")) {
             g.setColor(Color.red);
             g.fillRect(x + width / 4, y + height / 4, width - width / 2, height - height / 2);
             g.setColor(Color.white);
         }
+
         Font font = new Font("Consolas", Font.PLAIN, 20);
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
