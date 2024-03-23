@@ -145,8 +145,7 @@ public class GamePanel extends JPanel implements Runnable {
         for (Ball ball : copyOfBalls) {
             ball.draw(g);
         }
-        List<Brick> copyOfBricks = new ArrayList<>(bricks); // Create a copy of the bricks list
-        for (Brick brick : copyOfBricks) {
+        for (Brick brick : bricks) {
             brick.draw(g);
         }
         score.draw(g);
@@ -335,7 +334,10 @@ public class GamePanel extends JPanel implements Runnable {
                 count++;
 
             // BRICKS
-            for (Brick brick : bricks) {
+
+            List<Brick> newBrickList = new ArrayList<>();
+            for (int j = 0; j < bricks.size(); j++) {
+                Brick brick = bricks.get(j);
                 if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
                     // System.out.println("finished");
                 }
@@ -362,7 +364,6 @@ public class GamePanel extends JPanel implements Runnable {
                         earthQuakeTimer = null;
                     }
                 } else {
-
                     brick.width = BRICK_WIDTH;
                     brick.height = BRICK_HEIGHT;
                 }
@@ -380,12 +381,7 @@ public class GamePanel extends JPanel implements Runnable {
                 if ((checkTop || checkBottom)
                         && checkX) {
                     ball.setYDirection(-ball.yVelocity);
-                    int sss = brick.score;
-                    // System.out.println("t1 -> " + sss);
                     brick.score -= powerScore;
-                    // System.out.println("t22 -> " + brick.score);
-                    if (sss == brick.score)
-                        System.out.println("top or bottom");
                 }
 
                 boolean checkLeft = ball.x + BALL_DIAMETER >= brick.x
@@ -396,15 +392,12 @@ public class GamePanel extends JPanel implements Runnable {
                 if ((checkLeft || checkRight)
                         && checkY) {
                     ball.setXDirection(-ball.xVelocity);
-                    int sss = brick.score;
-                    // System.out.println("r1 -> " + sss);
                     brick.score -= powerScore;
-                    // System.out.println("r22 -> " + brick.score);
-                    if (sss == brick.score)
-                        System.out.println("left or right");
 
                 }
-
+                if (brick.score > 0) {
+                    newBrickList.add(brick);
+                }
                 if (brick.score <= 0) {
                     score.score += brick.finalScore - (int) score.time / 10;
                     removeBrick = brick;
@@ -485,6 +478,11 @@ public class GamePanel extends JPanel implements Runnable {
         }
         if (count == balls.size()) {
             if (isMoving) {
+                for (Brick brick : bricks) {
+                    System.out.println("x: " + brick.x + " y: " + brick.y + " score: " + brick.score);
+                    brick.draw(graphics);
+                }
+                System.out.println("count: " + bricks.size());
                 brickScore += (int) (Math.random() * 10);
                 startMovingBricks();
                 brickDownDY = BRICK_HEIGHT;
