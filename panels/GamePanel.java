@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,7 +24,7 @@ public class GamePanel extends JPanel implements Runnable {
     static final int BRICK_WIDTH = 70;
     static final int BRICK_HEIGHT = 40;
     Thread gameThread;
-    private  ScheduledExecutorService brickExecutor = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService brickExecutor = Executors.newSingleThreadScheduledExecutor();
     private double brickMoveSpeed = 0.1;
     private boolean isBrickExecutorRunning = false;
     Graphics graphics;
@@ -52,6 +53,9 @@ public class GamePanel extends JPanel implements Runnable {
     Integer speedTimer;
     boolean addBall = false;
     private double brickDownDY = 1;
+    int powerScore = 1;
+    Integer powerTimer;
+    boolean isConfused = false;
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
@@ -135,11 +139,14 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void draw(Graphics g) {
-        for (Ball ball : balls) {
+        List<Ball> copyOfBalls = new ArrayList<>(balls); // Create a copy of the balls list
+        for (Ball ball : copyOfBalls) {
             ball.draw(g);
         }
-        for (Brick brick : bricks)
+        List<Brick> copyOfBricks = new ArrayList<>(bricks); // Create a copy of the bricks list
+        for (Brick brick : copyOfBricks) {
             brick.draw(g);
+        }
         score.draw(g);
         for (ItemBall itemBall : itemBalls) {
             itemBall.draw(g);
@@ -170,7 +177,6 @@ public class GamePanel extends JPanel implements Runnable {
 
     private void moveBricksDown() {
         double dy = brickDownDY;
-        System.out.println("dy" + dy + " -> " + brickDownDY);
         for (int i = 0; i < bricks.size(); i++) {
             Brick brick = bricks.get(i);
             brick.y += dy;
@@ -192,7 +198,7 @@ public class GamePanel extends JPanel implements Runnable {
             itemConfused.y += dy;
         }
 
-        repaint();
+        // repaint();
     }
 
     private Color generateRandomColor() {
@@ -251,7 +257,7 @@ public class GamePanel extends JPanel implements Runnable {
             itemBallX += BRICK_WIDTH / 2 - 10;
             int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
             itemPowers.add(new ItemPower(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % 7 == 0) {
+        } else if (score.time % 2 == 0) {
             int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
             while (generatedXPositions.contains(itemBallX)) {
                 itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
@@ -269,6 +275,12 @@ public class GamePanel extends JPanel implements Runnable {
             if (speedTimer <= score.time) {
                 speedTimer = null;
                 mouseAdapter.speed /= 2;
+            }
+        }
+        if (powerTimer != null) {
+            if (powerTimer <= score.time) {
+                powerTimer = null;
+                powerScore = 1;
             }
         }
         for (int i = 0; i < balls.size(); i++) {
@@ -326,7 +338,12 @@ public class GamePanel extends JPanel implements Runnable {
                 if ((checkTop || checkBottom)
                         && checkX) {
                     ball.setYDirection(-ball.yVelocity);
-                    brick.score--;
+                    int sss = brick.score;
+                    System.out.println("t1 -> " + sss);
+                    brick.score -= powerScore;
+                    System.out.println("t22 -> " + brick.score);
+                    if (sss == brick.score)
+                        System.out.println("top or bottom");
                 }
 
                 boolean checkLeft = ball.x + BALL_DIAMETER >= brick.x
@@ -337,19 +354,25 @@ public class GamePanel extends JPanel implements Runnable {
                 if ((checkLeft || checkRight)
                         && checkY) {
                     ball.setXDirection(-ball.xVelocity);
-                    brick.score--;
+                    int sss = brick.score;
+                    System.out.println("r1 -> " + sss);
+                    brick.score -= powerScore;
+                    System.out.println("r22 -> " + brick.score);
+                    if (sss == brick.score)
+                        System.out.println("left or right");
+
                 }
 
                 if (brick.score <= 0) {
                     score.score += brick.finalScore - (int) score.time / 10;
                     removeBrick = brick;
                 }
+
             }
             if (removeBrick != null) {
                 bricks.remove(removeBrick);
                 removeBrick = null;
             }
-
             // itemBalls
             for (ItemBall itemBall : itemBalls) {
                 if (ball.x + BALL_DIAMETER >= itemBall.x && ball.x <= itemBall.x + 20
@@ -375,13 +398,46 @@ public class GamePanel extends JPanel implements Runnable {
                     if (speedTimer == null) {
                         speedTimer = score.time + 10;
                         mouseAdapter.speed *= 2;
+                        removedItemSpeed = itemSpeed;
                     }
-                    removedItemSpeed = itemSpeed;
                 }
             }
             if (removedItemSpeed != null) {
                 itemSpeeds.remove(removedItemSpeed);
                 removedItemSpeed = null;
+            }
+
+            // itemPower
+            for (ItemPower itemPower : itemPowers) {
+                if (ball.x + BALL_DIAMETER >= itemPower.x && ball.x <= itemPower.x + 20
+                        && ball.y + BALL_DIAMETER >= itemPower.y
+                        && ball.y <= itemPower.y + 20) {
+                    if (powerTimer == null) {
+                        powerTimer = score.time + 15;
+                        powerScore = 2;
+                        removedItemPower = itemPower;
+                    }
+                }
+            }
+            if (removedItemPower != null) {
+                itemPowers.remove(removedItemPower);
+                removedItemPower = null;
+            }
+
+            // item confused
+            for (ItemConfused itemConfused : itemConfuseds) {
+                if (ball.x + BALL_DIAMETER >= itemConfused.x && ball.x <= itemConfused.x + 20
+                        && ball.y + BALL_DIAMETER >= itemConfused.y
+                        && ball.y <= itemConfused.y + 20) {
+                    if (!isConfused) {
+                        isConfused = true;
+                        removedItemConfused = itemConfused;
+                    }
+                }
+            }
+            if (removedItemConfused != null) {
+                itemConfuseds.remove(removedItemConfused);
+                removedItemConfused = null;
             }
         }
         if (count == balls.size()) {
@@ -429,18 +485,28 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         public void setDirection(int mouseX, int mouseY) {
+            double xVelocity = 0;
+            double yVelocity = 0;
+            int ballX = balls.get(0).x + balls.get(0).width / 2;
+            int ballY = balls.get(0).y + balls.get(0).height / 2;
+
+            double angle = Math.atan2(mouseY - ballY, mouseX - ballX);
+
+            xVelocity = Math.cos(angle) * speed;
+            yVelocity = Math.sin(angle) * speed;
+            if (isConfused) {
+                Random random = new Random();
+                double xRandom = -10.0 + (20.0 * random.nextDouble());
+                double yRandom = -10.0 + (20.0 * random.nextDouble());
+                xVelocity = xRandom;
+                yVelocity = yRandom;
+                isConfused = false;
+            }
             for (Ball ball : balls) {
-                int ballX = ball.x + ball.width / 2;
-                int ballY = ball.y + ball.height / 2;
-
-                double angle = Math.atan2(mouseY - ballY, mouseX - ballX);
-
-                double xVelocity = Math.cos(angle) * speed;
-                double yVelocity = Math.sin(angle) * speed;
 
                 ball.xVelocity = xVelocity;
                 ball.yVelocity = yVelocity;
-
+                System.out.println(xVelocity + " " + yVelocity);
                 repaint();
 
                 try {
@@ -464,22 +530,22 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    // @Override
+    // protected void paintComponent(Graphics g) {
+    // super.paintComponent(g);
 
-        for (Ball ball : balls) {
-            ball.draw(g);
-        }
+    // for (Ball ball : balls) {
+    // ball.draw(g);
+    // }
 
-        for (Ball ball : balls) {
-            int ballCenterX = ball.x + ball.width / 2;
-            int ballCenterY = ball.y + ball.height / 2;
+    // for (Ball ball : balls) {
+    // int ballCenterX = ball.x + ball.width / 2;
+    // int ballCenterY = ball.y + ball.height / 2;
 
-            if (mousePosition.y < GAME_HEIGHT - 50) {
-                // g drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
-            }
-        }
-    }
+    // if (mousePosition.y < GAME_HEIGHT - 50) {
+    // // g drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
+    // }
+    // }
+    // }
 
 }
