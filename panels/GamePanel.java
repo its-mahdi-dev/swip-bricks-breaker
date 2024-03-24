@@ -100,10 +100,10 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     String level;
     String playerName;
     boolean gamePause;
-    JButton pauseResume = new JButton("pause");
     Image pauseResumeImage;
     Map<String, Integer> pauseInfo = Map.of(
             "x", 10, "y", 10, "width", 30, "height", 30);
+    boolean newGame = true;
 
     public GamePanel(CardLayout cardLayout, JPanel panel) {
         this.cardLayout = cardLayout;
@@ -113,6 +113,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         this.setFocusable(
                 true);
         readyGame(); // Initialize the ready panel
+
         setPreferredSize(new Dimension(MainPage.GAME_WIDTH, MainPage.GAME_HEIGHT));
     }
 
@@ -135,7 +136,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void setGameLevel(String level) {
         switch (level) {
             case "Easy":
-                brickMoveSpeed = 120;
+                brickMoveSpeed = 10;
                 maxBrickGeneration = 3;
                 break;
             case "Medium":
@@ -289,18 +290,26 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         newBall();
         generateRandomBrick();
         generateItemBall();
-        mouseAdapter = new AL(balls, 10);
-        this.addMouseListener(mouseAdapter);
-        gameThread = new Thread(this);
-        gameThread.start();
+        if (newGame) {
+            System.out.println("new game started");
+            mouseAdapter = new AL(balls, 10);
+            this.addMouseListener(mouseAdapter);
+            this.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    mousePosition = e.getPoint();
+                    repaint();
+                }
+            });
+            newGame = false;
+        }
+        if (gameThread == null) {
+
+            gameThread = new Thread(this);
+            gameThread.start();
+        }
         mousePosition = new Point(0, 0);
-        this.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                mousePosition = e.getPoint();
-                repaint();
-            }
-        });
+
         startMovingBricks();
         gameStarted = true;
         if ((boolean) gameSettingObject.get("music"))
@@ -331,12 +340,20 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         // gameThread = null; // Set the thread reference to null
         // }
 
-        stopMovingBricks();
     }
 
     // Method to reset game state
     public void resetGame() {
         // Clear any game elements (balls, bricks, etc.)
+
+        gameOverBrick = null;
+        pauseResumeImage = null;
+        isExtraHealthAble = false;
+        extraHealthItem = null;
+        extraHealth = false;
+        speedTimer = null;
+        powerTimer = null;
+        colorTimer = null;
         if (score != null)
             score.reset();
         balls.clear();
@@ -549,7 +566,6 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             Brick brick = bricks.get(j);
             if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT && gameStarted) {
                 if (extraHealth) {
-                    System.out.println("u use health");
                     extraHealth = false;
                     gameOverBrick = brick;
                 } else {
@@ -733,11 +749,6 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void checkBallMoving() {
         if (count == balls.size()) {
             if (isMoving) {
-                for (int i = 0; i < bricks.size(); i++) {
-                    System.out.println(
-                            "x: " + bricks.get(i).x + " y: " + bricks.get(i).y + " score: " + bricks.get(i).score);
-                }
-                System.out.println("count: " + bricks.size());
                 brickScore += (int) (Math.random() * maxBrickGeneration);
                 startMovingBricks();
                 brickDownDY = BRICK_HEIGHT;
@@ -883,6 +894,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
                         && e.getY() >= pauseInfo.get("y")
                         && e.getY() <= pauseInfo.get("y") + pauseInfo.get("height")) {
                     gamePause = !gamePause;
+
                     if (gamePause) {
                         pauseGame();
                     } else {
