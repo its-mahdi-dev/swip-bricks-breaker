@@ -3,6 +3,10 @@ package panels;
 import javax.swing.*;
 import javax.swing.border.Border;
 
+import org.json.simple.JSONObject;
+
+import Data.JsonHelper;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,15 +30,14 @@ public class GameMenu extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5); // Set insets to provide space between components
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridy = 1;
         addLabels();
         addButtons();
 
-        // Add contentPanel to GameMenu
         setPreferredSize(panel.getPreferredSize());
-        setLayout(new BorderLayout()); // Use BorderLayout for contentPanel to center its components
-        add(contentPanel, BorderLayout.CENTER); // Add contentPanel to the center of GameMenu
+        setLayout(new BorderLayout());
+        add(contentPanel, BorderLayout.CENTER);
     }
 
     private void addButtons() {
@@ -52,7 +55,6 @@ public class GameMenu extends JPanel {
             }
         });
         buttons.put("start", starButton);
-
 
         JButton historyButton = new JButton("Game History");
         historyButton.setBackground(Color.blue);
@@ -112,7 +114,9 @@ public class GameMenu extends JPanel {
         title.setHorizontalAlignment(SwingConstants.CENTER);
         contentPanel.add(title, gbc);
 
-        JLabel record = new JLabel("game Record:");
+        JsonHelper jsonHelper = new JsonHelper("Data/history.json");
+        JSONObject jsonObject = jsonHelper.readJsonFromFile();
+        JLabel record = new JLabel("game Record: " + jsonObject.get("recorde"));
         record.setFont(new Font("Cascadia Code", Font.BOLD, 20));
         record.setForeground(Color.black);
         record.setHorizontalAlignment(SwingConstants.CENTER);
