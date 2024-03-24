@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import items.*;
 import panels.GamePanel.AL;
+import settings.GameSetting;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -58,6 +59,7 @@ public class GamePanel extends JPanel implements Runnable {
     boolean isConfused = false;
     Integer colorTimer;
     Integer earthQuakeTimer;
+    int count = 0;
 
     public GamePanel() {
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
@@ -105,10 +107,11 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void newbrick() {
-        bricks.add(new Brick(70, 280, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT, generateRandomColor(),
+        bricks.add(new Brick(70, 280, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
+                GameSetting.generateRandomColor(),
                 score.score + 1));
         bricks.add(new Brick(420, 120, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH,
-                BRICK_HEIGHT, generateRandomColor(), score.score));
+                BRICK_HEIGHT, GameSetting.generateRandomColor(), score.score));
     }
 
     public void newItemBall() {
@@ -202,13 +205,6 @@ public class GamePanel extends JPanel implements Runnable {
         // repaint();
     }
 
-    private Color generateRandomColor() {
-        int r = (int) (Math.random() * 256); // Red component
-        int g = (int) (Math.random() * 256); // Green component
-        int b = (int) (Math.random() * 256); // Blue component
-        return new Color(r, g, b);
-    }
-
     private void generateRandomBrick() {
         generatedXPositions = new ArrayList<>();
         int random = (int) (Math.random() * 8);
@@ -220,7 +216,7 @@ public class GamePanel extends JPanel implements Runnable {
             generatedXPositions.add(brickX);
             int brickY = 50;
             bricks.add(new Brick(brickX, brickY, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
-                    generateRandomColor(), brickScore));
+                    GameSetting.generateRandomColor(), brickScore));
         }
 
     }
@@ -239,41 +235,26 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void generateOtherItems() {
-        System.out.println(score.time);
+        int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+        while (generatedXPositions.contains(itemBallX)) {
+            itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
+        }
+        generatedXPositions.add(itemBallX);
+        itemBallX += BRICK_WIDTH / 2 - 10;
+        int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
         if (score.time % 6 == 0) {
-            int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
-            while (generatedXPositions.contains(itemBallX)) {
-                itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
-            }
-            generatedXPositions.add(itemBallX);
-            itemBallX += BRICK_WIDTH / 2 - 10;
-            int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
             itemSpeeds.add(new ItemSpeed(itemBallX, itemBallY, 20, 20));
         } else if (score.time % 5 == 0) {
-            int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
-            while (generatedXPositions.contains(itemBallX)) {
-                itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
-            }
-            generatedXPositions.add(itemBallX);
-            itemBallX += BRICK_WIDTH / 2 - 10;
-            int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
             itemPowers.add(new ItemPower(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % 2 == 0) {
-            int itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
-            while (generatedXPositions.contains(itemBallX)) {
-                itemBallX = (int) (Math.random() * 8) * BRICK_WIDTH;
-            }
-            generatedXPositions.add(itemBallX);
-            itemBallX += BRICK_WIDTH / 2 - 10;
-            int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
+        } else if (score.time % 7 == 0) {
             itemConfuseds.add(new ItemConfused(itemBallX, itemBallY, 20, 20));
         }
     }
 
     private void setBombItem(Brick brick) {
-        List<Brick> bricksAround = getBricksAround(brick);
+        List<Brick> bricksAround = GameSetting.getBricksAround(brick, bricks);
         for (Brick b : bricksAround) {
-            b.score--;
+            b.score -= 50;
         }
     }
 
@@ -296,28 +277,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    public List<Brick> getBricksAround(Brick targetBrick) {
-        List<Brick> bricksAround = new ArrayList<>();
-
-        Point targetCenter = new Point(targetBrick.x + targetBrick.width / 2, targetBrick.y + targetBrick.height / 2);
-
-        for (Brick brick : bricks) {
-            if (brick != targetBrick) {
-                Point brickCenter = new Point(brick.x + brick.width / 2, brick.y + brick.height / 2);
-
-                double distance = targetCenter.distance(brickCenter);
-
-                if (distance <= 150) {
-                    bricksAround.add(brick);
-                }
-            }
-        }
-
-        return bricksAround;
-    }
-
-    public void checkCollision() {
-        int count = 0;
+    private void checkItemsTimer() {
         if (speedTimer != null) {
             if (speedTimer <= score.time) {
                 speedTimer = null;
@@ -330,6 +290,9 @@ public class GamePanel extends JPanel implements Runnable {
                 powerScore = 1;
             }
         }
+    }
+
+    private void checkBalls() {
         for (int i = 0; i < balls.size(); i++) {
 
             Ball ball = balls.get(i);
@@ -365,156 +328,164 @@ public class GamePanel extends JPanel implements Runnable {
                 count++;
 
             // BRICKS
+            checkBricks(ball);
 
-            List<Brick> newBrickList = new ArrayList<>();
-            for (int j = 0; j < bricks.size(); j++) {
-                Brick brick = bricks.get(j);
-                if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
-                    // System.out.println("finished");
-                }
-                // boolean checkX = ball.x + BALL_DIAMETER >= brick.x && ball.x <= brick.x +
-                // BRICK_WIDTH;
-                // boolean checkY = ball.y + BALL_DIAMETER >= brick.y && ball.y <= brick.y +
-                // BRICK_HEIGHT;
-                if (colorTimer != null) {
-                    if (colorTimer >= score.time) {
-                        brick.color = generateRandomColor();
-                    } else {
-                        colorTimer = null;
-                    }
-                }
-                if (earthQuakeTimer != null) {
-                    if (earthQuakeTimer >= score.time) {
-                        int newWidth = (int) (Math.sin(System.currentTimeMillis() * 0.003) * 20) + BRICK_WIDTH;
-                        int newHeight = (int) (Math.cos(System.currentTimeMillis() * 0.003) * 20) + BRICK_HEIGHT;
-                        brick.width = newWidth;
-                        brick.height = newHeight;
-                    } else {
-                        brick.width = BRICK_WIDTH;
-                        brick.height = BRICK_HEIGHT;
-                        earthQuakeTimer = null;
-                    }
-                } else {
-                    brick.width = BRICK_WIDTH;
-                    brick.height = BRICK_HEIGHT;
-                }
+            // ITEMS
+            checkItems(ball);
 
-                boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
-                        && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
-                boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y
-                        && ball.y + (BALL_DIAMETER / 2) <= brick.y + BRICK_HEIGHT;
+        }
 
-                boolean checkTop = ball.y + BALL_DIAMETER >= brick.y
-                        && ball.y + BALL_DIAMETER < brick.y + BRICK_HEIGHT / 2
-                        && ball.yVelocity > 0;
-                boolean checkBottom = ball.y <= brick.y + BRICK_HEIGHT && ball.y > brick.y + BRICK_HEIGHT / 2
-                        && ball.yVelocity < 0;
-                if ((checkTop || checkBottom)
-                        && checkX) {
-                    ball.setYDirection(-ball.yVelocity);
-                    brick.score -= powerScore;
-                }
+    }
 
-                boolean checkLeft = ball.x + BALL_DIAMETER >= brick.x
-                        && ball.x + BALL_DIAMETER < brick.x + BRICK_WIDTH / 2 && ball.xVelocity > 0;
-                boolean checkRight = ball.x <= brick.x + BRICK_WIDTH && ball.x > brick.x + BRICK_WIDTH / 2
-                        && ball.xVelocity < 0;
-
-                if ((checkLeft || checkRight)
-                        && checkY) {
-                    ball.setXDirection(-ball.xVelocity);
-                    brick.score -= powerScore;
-
-                }
-                if (brick.score > 0) {
-                    newBrickList.add(brick);
-                }
-                if (brick.score <= 0) {
-                    score.score += brick.finalScore - (int) score.time / 10;
-                    removeBrick = brick;
-                }
-
+    private void checkBricks(Ball ball) {
+        for (int j = 0; j < bricks.size(); j++) {
+            Brick brick = bricks.get(j);
+            if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
+                // System.out.println("finished");
             }
-            if (removeBrick != null) {
-                setSpecialItems(removeBrick);
-                bricks.remove(removeBrick);
-                removeBrick = null;
-            }
-            // itemBalls
-            for (ItemBall itemBall : itemBalls) {
-                if (ball.x + BALL_DIAMETER >= itemBall.x && ball.x <= itemBall.x + 20
-                        && ball.y + BALL_DIAMETER >= itemBall.y
-                        && ball.y <= itemBall.y + 20) {
-                    removedItemBall = itemBall;
-                    addBall = true;
+            // boolean checkX = ball.x + BALL_DIAMETER >= brick.x && ball.x <= brick.x +
+            // BRICK_WIDTH;
+            // boolean checkY = ball.y + BALL_DIAMETER >= brick.y && ball.y <= brick.y +
+            // BRICK_HEIGHT;
+            ckeckSpecialItems(ball, brick);
 
-                }
+            boolean checkX = ball.x + (BALL_DIAMETER / 2) >= brick.x
+                    && ball.x + (BALL_DIAMETER / 2) <= brick.x + BRICK_WIDTH;
+            boolean checkY = ball.y + (BALL_DIAMETER / 2) >= brick.y
+                    && ball.y + (BALL_DIAMETER / 2) <= brick.y + BRICK_HEIGHT;
+
+            boolean checkTop = ball.y + BALL_DIAMETER >= brick.y
+                    && ball.y + BALL_DIAMETER < brick.y + BRICK_HEIGHT / 2
+                    && ball.yVelocity > 0;
+            boolean checkBottom = ball.y <= brick.y + BRICK_HEIGHT && ball.y > brick.y + BRICK_HEIGHT / 2
+                    && ball.yVelocity < 0;
+            if ((checkTop || checkBottom)
+                    && checkX) {
+                ball.setYDirection(-ball.yVelocity);
+                brick.score -= powerScore;
             }
 
-            if (removedItemBall != null) {
-                itemBalls.remove(removedItemBall);
-                removedItemBall = null;
+            boolean checkLeft = ball.x + BALL_DIAMETER >= brick.x
+                    && ball.x + BALL_DIAMETER < brick.x + BRICK_WIDTH / 2 && ball.xVelocity > 0;
+            boolean checkRight = ball.x <= brick.x + BRICK_WIDTH && ball.x > brick.x + BRICK_WIDTH / 2
+                    && ball.xVelocity < 0;
+
+            if ((checkLeft || checkRight)
+                    && checkY) {
+                ball.setXDirection(-ball.xVelocity);
+                brick.score -= powerScore;
+
+            }
+            if (brick.score <= 0) {
+                score.score += brick.finalScore - (int) score.time / 10;
+                removeBrick = brick;
             }
 
-            // itemSpeed
-            for (ItemSpeed itemSpeed : itemSpeeds) {
-                if (ball.x + BALL_DIAMETER >= itemSpeed.x && ball.x <= itemSpeed.x + 20
-                        && ball.y + BALL_DIAMETER >= itemSpeed.y
-                        && ball.y <= itemSpeed.y + 20) {
+        }
+        if (removeBrick != null) {
+            setSpecialItems(removeBrick);
+            bricks.remove(removeBrick);
+            removeBrick = null;
+        }
+    }
 
-                    if (speedTimer == null) {
-                        speedTimer = score.time + 10;
-                        mouseAdapter.speed *= 2;
-                        removedItemSpeed = itemSpeed;
-                    }
-                }
-            }
-            if (removedItemSpeed != null) {
-                itemSpeeds.remove(removedItemSpeed);
-                removedItemSpeed = null;
-            }
+    private void checkItems(Ball ball) {
+        // itemBalls
+        for (ItemBall itemBall : itemBalls) {
+            if (ball.x + BALL_DIAMETER >= itemBall.x && ball.x <= itemBall.x + 20
+                    && ball.y + BALL_DIAMETER >= itemBall.y
+                    && ball.y <= itemBall.y + 20) {
+                removedItemBall = itemBall;
+                addBall = true;
 
-            // itemPower
-            for (ItemPower itemPower : itemPowers) {
-                if (ball.x + BALL_DIAMETER >= itemPower.x && ball.x <= itemPower.x + 20
-                        && ball.y + BALL_DIAMETER >= itemPower.y
-                        && ball.y <= itemPower.y + 20) {
-                    if (powerTimer == null) {
-                        powerTimer = score.time + 15;
-                        powerScore = 2;
-                        removedItemPower = itemPower;
-                    }
-                }
-            }
-            if (removedItemPower != null) {
-                itemPowers.remove(removedItemPower);
-                removedItemPower = null;
-            }
-
-            // item confused
-            for (ItemConfused itemConfused : itemConfuseds) {
-                if (ball.x + BALL_DIAMETER >= itemConfused.x && ball.x <= itemConfused.x + 20
-                        && ball.y + BALL_DIAMETER >= itemConfused.y
-                        && ball.y <= itemConfused.y + 20) {
-                    if (!isConfused) {
-                        isConfused = true;
-                        removedItemConfused = itemConfused;
-                    }
-                }
-            }
-            if (removedItemConfused != null) {
-                itemConfuseds.remove(removedItemConfused);
-                removedItemConfused = null;
             }
         }
+
+        if (removedItemBall != null) {
+            itemBalls.remove(removedItemBall);
+            removedItemBall = null;
+        }
+
+        // itemSpeed
+        for (ItemSpeed itemSpeed : itemSpeeds) {
+            if (ball.x + BALL_DIAMETER >= itemSpeed.x && ball.x <= itemSpeed.x + 20
+                    && ball.y + BALL_DIAMETER >= itemSpeed.y
+                    && ball.y <= itemSpeed.y + 20) {
+
+                if (speedTimer == null) {
+                    speedTimer = score.time + 10;
+                    mouseAdapter.speed *= 2;
+                    removedItemSpeed = itemSpeed;
+                }
+            }
+        }
+        if (removedItemSpeed != null) {
+            itemSpeeds.remove(removedItemSpeed);
+            removedItemSpeed = null;
+        }
+
+        // itemPower
+        for (ItemPower itemPower : itemPowers) {
+            if (ball.x + BALL_DIAMETER >= itemPower.x && ball.x <= itemPower.x + 20
+                    && ball.y + BALL_DIAMETER >= itemPower.y
+                    && ball.y <= itemPower.y + 20) {
+                if (powerTimer == null) {
+                    powerTimer = score.time + 15;
+                    powerScore = 2;
+                    removedItemPower = itemPower;
+                }
+            }
+        }
+        if (removedItemPower != null) {
+            itemPowers.remove(removedItemPower);
+            removedItemPower = null;
+        }
+
+        // item confused
+        for (ItemConfused itemConfused : itemConfuseds) {
+            if (ball.x + BALL_DIAMETER >= itemConfused.x && ball.x <= itemConfused.x + 20
+                    && ball.y + BALL_DIAMETER >= itemConfused.y
+                    && ball.y <= itemConfused.y + 20) {
+                if (!isConfused) {
+                    isConfused = true;
+                    removedItemConfused = itemConfused;
+                }
+            }
+        }
+        if (removedItemConfused != null) {
+            itemConfuseds.remove(removedItemConfused);
+            removedItemConfused = null;
+        }
+    }
+
+    private void ckeckSpecialItems(Ball ball, Brick brick) {
+        if (colorTimer != null) {
+            if (colorTimer >= score.time) {
+                brick.color = GameSetting.generateRandomColor();
+            } else {
+                colorTimer = null;
+            }
+        }
+        if (earthQuakeTimer != null) {
+            if (earthQuakeTimer >= score.time) {
+                int newWidth = (int) (Math.sin(System.currentTimeMillis() * 0.003) * 20) + BRICK_WIDTH;
+                int newHeight = (int) (Math.cos(System.currentTimeMillis() * 0.003) * 20) + BRICK_HEIGHT;
+                brick.width = newWidth;
+                brick.height = newHeight;
+            } else {
+                brick.width = BRICK_WIDTH;
+                brick.height = BRICK_HEIGHT;
+                earthQuakeTimer = null;
+            }
+        } else {
+            brick.width = BRICK_WIDTH;
+            brick.height = BRICK_HEIGHT;
+        }
+    }
+
+    private void checkBallMoving() {
         if (count == balls.size()) {
             if (isMoving) {
-                // for (int k = 0; k < bricks.size(); k++) {
-                // System.out.println(
-                // "x: " + bricks.get(k).x + " y: " + bricks.get(k).y + "score: " +
-                // bricks.get(k).score);
-                // }
-                // System.out.println("count: " + bricks.size());
                 brickScore += (int) (Math.random() * 10);
                 startMovingBricks();
                 brickDownDY = BRICK_HEIGHT;
@@ -536,7 +507,13 @@ public class GamePanel extends JPanel implements Runnable {
             brickDownDY = 1;
             count = 0;
         }
+    }
 
+    public void checkCollision() {
+        count = 0;
+        checkItemsTimer();
+        checkBalls();
+        checkBallMoving();
         if (timer == null) {
             timer = new Timer(1000, new ActionListener() {
                 @Override

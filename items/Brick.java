@@ -32,7 +32,7 @@ public class Brick extends Rectangle {
         } else if (randomNumber % 8 == 0) {
             this.specialItem = "earthQuake";
             System.out.println("earth");
-        } else if (randomNumber % 2 == 0) {
+        } else if (randomNumber % 11 == 0) {
             this.specialItem = "bomb";
         }
     }
