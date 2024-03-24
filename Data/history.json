@@ -1,3 +1,41 @@
 {
-    "recorde" : 550
+  "record": 550,
+  "history": [
+    {
+      "record": 432,
+      "name": "player1",
+      "date": "5/8/54",
+      "time": "50:60"
+    },
+    {
+      "record": 324,
+      "name": "player2",
+      "date": "5/8/44",
+      "time": "7:80"
+    },
+    {
+      "record": 324,
+      "name": "player2",
+      "date": "5/8/44",
+      "time": "7:80"
+    },
+    {
+      "record": 324,
+      "name": "player2",
+      "date": "5/8/44",
+      "time": "7:80"
+    },
+    {
+      "record": 324,
+      "name": "player2",
+      "date": "5/8/44",
+      "time": "7:80"
+    },
+    {
+      "record": 324,
+      "name": "player2",
+      "date": "5/8/44",
+      "time": "7:80"
+    }
+  ]
 }

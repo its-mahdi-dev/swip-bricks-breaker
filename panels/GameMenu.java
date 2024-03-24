@@ -61,8 +61,8 @@ public class GameMenu extends JPanel {
         historyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cardLayout.show(panel, "game");
-                System.out.println("Switching to game panel");
+                cardLayout.show(panel, "history");
+                System.out.println("Switching to history panel");
             }
         });
         buttons.put("history", historyButton);
@@ -116,7 +116,7 @@ public class GameMenu extends JPanel {
 
         JsonHelper jsonHelper = new JsonHelper("Data/history.json");
         JSONObject jsonObject = jsonHelper.readJsonFromFile();
-        JLabel record = new JLabel("game Record: " + jsonObject.get("recorde"));
+        JLabel record = new JLabel("game Record: " + jsonObject.get("record"));
         record.setFont(new Font("Cascadia Code", Font.BOLD, 20));
         record.setForeground(Color.black);
         record.setHorizontalAlignment(SwingConstants.CENTER);
