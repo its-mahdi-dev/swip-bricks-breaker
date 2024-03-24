@@ -63,11 +63,12 @@ public class GamePanel extends JPanel implements Runnable {
     Integer earthQuakeTimer;
     int count = 0;
     private boolean gameStarted = false;
+    JButton starButton;
 
     public GamePanel(CardLayout cardLayout, JPanel panel) {
         this.cardLayout = cardLayout;
         this.panel = panel;
-        JButton starButton = new JButton("start game");
+        starButton = new JButton("start game");
         starButton.setBounds(GAME_WIDTH / 2 - 100, 20, 200, 50);
         starButton.addActionListener(new ActionListener() {
             @Override
@@ -173,7 +174,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void startGame() {
-
+        starButton.setVisible(false);
         stopGame(); // Stop the current game if running
         resetGame(); // Reset game state
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
