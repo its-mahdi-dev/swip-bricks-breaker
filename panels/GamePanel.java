@@ -101,7 +101,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void setGameLevel(String level) {
         switch (level) {
             case "Easy":
-                brickMoveSpeed = 120;
+                brickMoveSpeed = 4;
                 maxBrickGeneration = 3;
                 break;
             case "Medium":
@@ -233,15 +233,17 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
 
     // Method to stop the game thread
     public void stopGame() {
-        if (gameThread != null && gameThread.isAlive()) {
-            gameThread.interrupt(); // Interrupt the current game thread
-            try {
-                gameThread.join(); // Wait for the thread to finish gracefully
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            gameThread = null; // Set the thread reference to null
-        }
+        // if (gameThread != null && gameThread.isAlive()) {
+        // gameThread.interrupt(); // Interrupt the current game thread
+        // try {
+        // gameThread.join(); // Wait for the thread to finish gracefully
+        // } catch (InterruptedException e) {
+        // e.printStackTrace();
+        // }
+        // gameThread = null; // Set the thread reference to null
+        // }
+
+        stopMovingBricks();
     }
 
     // Method to reset game state
@@ -430,7 +432,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         for (int j = 0; j < bricks.size(); j++) {
             Brick brick = bricks.get(j);
             if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
-                // System.out.println("finished");
+                GameOver();
             }
             // boolean checkX = ball.x + BALL_DIAMETER >= brick.x && ball.x <= brick.x +
             // BRICK_WIDTH;
@@ -617,6 +619,31 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             });
         }
         timer.start();
+    }
+
+    private void GameOver() {
+        gameStarted = false;
+        stopGame();
+        String[] options = new String[] { "start again", "back ro ready page", "back to menu" };
+        String option = options[JOptionPane.showOptionDialog(panel, "sorry, Game over", "finished",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, options, null)];
+        switch (option) {
+            case "start again":
+                startGame();
+                break;
+            case "back ro ready page":
+                resetGame();
+                readyPanel.setVisible(true);
+                break;
+            case "back to menu":
+                resetGame();
+                cardLayout.show(panel, "menu");
+                break;
+            default:
+                break;
+        }
+
     }
 
     public class AL extends MouseAdapter {
