@@ -40,6 +40,8 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
 
     CardLayout cardLayout;
     JPanel panel;
+
+    JSONObject gameSettingObject;
     static final int GAME_HEIGHT = 700;
     static final int GAME_WIDTH = 560;
     static final Dimension SCREEN_SIZE = new Dimension(GAME_WIDTH, GAME_HEIGHT);
@@ -249,11 +251,13 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             Image extraHealthImage = new ImageIcon("images/health.png").getImage();
             g.drawImage(extraHealthImage, GAME_WIDTH - 100, 10, 30, 30, null);
         }
-        if (!isMoving && mousePosition.y < GAME_HEIGHT - 50 && mousePosition.y >= 50) {
-            Ball ball = balls.get(0);
-            int ballCenterX = ball.x + ball.width / 2;
-            int ballCenterY = ball.y + ball.height / 2;
-            g.drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
+        if ((boolean) gameSettingObject.get("marking")) {
+            if (!isMoving && mousePosition.y < GAME_HEIGHT - 50 && mousePosition.y >= 50) {
+                Ball ball = balls.get(0);
+                int ballCenterX = ball.x + ball.width / 2;
+                int ballCenterY = ball.y + ball.height / 2;
+                g.drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
+            }
         }
 
         if (gamePause)
@@ -277,6 +281,10 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         readyPanel.setVisible(false);
         stopGame();
         resetGame();
+
+        JsonHelper jsonHelper = new JsonHelper("Data/settings.json");
+        JSONObject jsonObject = jsonHelper.readJsonFromFile();
+        gameSettingObject = jsonObject;
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
         newBall();
         generateRandomBrick();
@@ -295,7 +303,8 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         });
         startMovingBricks();
         gameStarted = true;
-        playMusic();
+        if ((boolean) gameSettingObject.get("music"))
+            playMusic();
     }
 
     private void playMusic() {
@@ -775,7 +784,8 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         if (brick != gameOverBrick) {
             gameStarted = false;
             stopGame();
-            writeHistory();
+            if ((boolean) gameSettingObject.get("save"))
+                writeHistory();
             String[] options = new String[] { "start again", "back ro ready page", "back to menu" };
             String option = options[JOptionPane.showOptionDialog(panel, "sorry, Game over", "finished",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,

@@ -13,7 +13,7 @@ public class MainPage extends JPanel {
 
     // Main panel
     public MainPage() {
-        
+
         this.setFocusable(true);
         this.setPreferredSize(SCREEN_SIZE);
         cardLayout = new CardLayout();
@@ -22,11 +22,12 @@ public class MainPage extends JPanel {
         JPanel menuPanel = new GameMenu(cardLayout, panel);
         JPanel gamePanel = new GamePanel(cardLayout, panel);
         JPanel historyPanel = new HistoryPanel(cardLayout, panel);
+        JPanel settingsPanel = new SettingsPanel(cardLayout, panel);
 
         panel.add(menuPanel, "menu");
         panel.add(gamePanel, "game");
         panel.add(historyPanel, "history");
-
+        panel.add(settingsPanel, "settings");
         cardLayout.show(panel, "menu");
         this.add(panel);
     }

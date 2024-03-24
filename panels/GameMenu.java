@@ -72,8 +72,8 @@ public class GameMenu extends JPanel {
         settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cardLayout.show(panel, "game");
                 System.out.println("Switching to game panel");
+                cardLayout.show(panel, "settings");
             }
         });
         buttons.put("settings", settingsButton);

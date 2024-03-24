@@ -43,9 +43,6 @@ public class HistoryPanel extends JPanel {
 
         add(topPanel, BorderLayout.NORTH);
 
-        this.cardLayout = cardLayout;
-        this.panel = panel;
-
         setHistory();
 
         contentPanel = new JPanel();
