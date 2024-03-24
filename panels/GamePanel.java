@@ -68,11 +68,16 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     List<ItemSpeed> itemSpeeds = new ArrayList<>();
     List<ItemPower> itemPowers = new ArrayList<>();
     List<ItemConfused> itemConfuseds = new ArrayList<>();
+    List<ItemReversed> itemReverseds = new ArrayList<>();
     List<Integer> generatedXPositions = new ArrayList<>();
     ItemBall removedItemBall;
     ItemConfused removedItemConfused;
     ItemPower removedItemPower;
     ItemSpeed removedItemSpeed;
+    ItemReversed removedItemReversed;
+    boolean extraHealth;
+    boolean isExtraHealthAble;
+    ItemHealth extraHealthItem;
     Integer speedTimer;
     boolean addBall = false;
     private double brickDownDY = 1;
@@ -87,6 +92,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private GameReadyPanel readyPanel;
     public static int maxBrickGeneration = 5;
     private Clip clip;
+    Brick gameOverBrick;
     // game settings
     Color ballColor;
     String level;
@@ -127,7 +133,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void setGameLevel(String level) {
         switch (level) {
             case "Easy":
-                brickMoveSpeed = 120;
+                brickMoveSpeed = 10;
                 maxBrickGeneration = 3;
                 break;
             case "Medium":
@@ -226,7 +232,11 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         for (ItemConfused itemConfused : itemConfuseds) {
             itemConfused.draw(g);
         }
-
+        for (ItemReversed itemReversed : itemReverseds) {
+            itemReversed.draw(g);
+        }
+        if (extraHealthItem != null)
+            extraHealthItem.draw(g);
         if (!isMoving && mousePosition.y < GAME_HEIGHT - 50 && mousePosition.y >= 50) {
             Ball ball = balls.get(0);
             int ballCenterX = ball.x + ball.width / 2;
@@ -314,6 +324,9 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         itemSpeeds.clear();
         itemPowers.clear();
         itemConfuseds.clear();
+        isExtraHealthAble = false;
+        extraHealthItem = null;
+        extraHealth = false;
 
         // Other game state reset operations...
     }
@@ -345,6 +358,13 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         for (int i = 0; i < itemConfuseds.size(); i++) {
             ItemConfused itemConfused = itemConfuseds.get(i);
             itemConfused.y += dy;
+        }
+        for (int i = 0; i < itemReverseds.size(); i++) {
+            ItemReversed itemReversed = itemReverseds.get(i);
+            itemReversed.y += dy;
+        }
+        if (extraHealthItem != null) {
+            extraHealthItem.y += dy;
         }
 
         // repaint();
@@ -392,10 +412,15 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
         if (score.time % maxBrickGeneration + 1 == 0) {
             itemSpeeds.add(new ItemSpeed(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % maxBrickGeneration == 0) {
+        } else if (score.time % maxBrickGeneration + 4 == 0) {
             itemPowers.add(new ItemPower(itemBallX, itemBallY, 20, 20));
         } else if (score.time % maxBrickGeneration + 2 == 0) {
             itemConfuseds.add(new ItemConfused(itemBallX, itemBallY, 20, 20));
+        } else if (score.time % maxBrickGeneration + 3 == 0) {
+            itemReverseds.add(new ItemReversed(itemBallX, itemBallY, 20, 20));
+        } else if (score.time % maxBrickGeneration - 1 == 0 && !isExtraHealthAble) {
+            System.out.println("health");
+            extraHealthItem = new ItemHealth(itemBallX, itemBallY, 20, 20);
         }
     }
 
@@ -503,7 +528,13 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         for (int j = 0; j < bricks.size(); j++) {
             Brick brick = bricks.get(j);
             if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT && gameStarted) {
-                GameOver();
+                if (extraHealth) {
+                    System.out.println("u use health");
+                    extraHealth = false;
+                    gameOverBrick = brick;
+                } else {
+                    GameOver(brick);
+                }
             }
             // boolean checkX = ball.x + BALL_DIAMETER >= brick.x && ball.x <= brick.x +
             // BRICK_WIDTH;
@@ -618,6 +649,35 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             itemConfuseds.remove(removedItemConfused);
             removedItemConfused = null;
         }
+
+        // item reversed
+        for (ItemReversed itemReversed : itemReverseds) {
+            if (ball.x + BALL_DIAMETER >= itemReversed.x && ball.x <= itemReversed.x + 20
+                    && ball.y + BALL_DIAMETER >= itemReversed.y
+                    && ball.y <= itemReversed.y + 20) {
+
+            }
+        }
+        if (removedItemReversed != null) {
+            itemReverseds.remove(removedItemReversed);
+            removedItemReversed = null;
+        }
+
+        if (extraHealthItem != null) {
+            if (ball.x + BALL_DIAMETER >= extraHealthItem.x && ball.x <= extraHealthItem.x + 20
+                    && ball.y + BALL_DIAMETER >= extraHealthItem.y
+                    && ball.y <= extraHealthItem.y + 20) {
+
+                isExtraHealthAble = true;
+                extraHealth = true;
+
+            }
+        }
+
+        if (extraHealthItem != null && isExtraHealthAble) {
+            extraHealthItem = null;
+        }
+
     }
 
     private void ckeckSpecialItems(Ball ball, Brick brick) {
@@ -695,32 +755,34 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         timer.start();
     }
 
-    private void GameOver() {
-        gameStarted = false;
-        stopGame();
-        writeHistory();
-        String[] options = new String[] { "start again", "back ro ready page", "back to menu" };
-        String option = options[JOptionPane.showOptionDialog(panel, "sorry, Game over", "finished",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-                null, options, null)];
-        switch (option) {
-            case "start again":
-                startGame();
-                break;
-            case "back ro ready page":
-                resetGame();
-                readyPanel.setVisible(true);
-                break;
-            case "back to menu":
-                resetGame();
-                cardLayout.show(panel, "menu");
-                break;
-            default:
-                resetGame();
-                cardLayout.show(panel, "menu");
-                break;
-        }
+    private void GameOver(Brick brick) {
+        if (brick != gameOverBrick) {
+            gameStarted = false;
+            stopGame();
+            writeHistory();
+            String[] options = new String[] { "start again", "back ro ready page", "back to menu" };
+            String option = options[JOptionPane.showOptionDialog(panel, "sorry, Game over", "finished",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, options, null)];
+            switch (option) {
+                case "start again":
+                    startGame();
+                    break;
+                case "back ro ready page":
+                    resetGame();
+                    readyPanel.setVisible(true);
+                    break;
+                case "back to menu":
+                    resetGame();
+                    cardLayout.show(panel, "menu");
+                    break;
+                default:
+                    resetGame();
+                    cardLayout.show(panel, "menu");
+                    break;
+            }
 
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -739,8 +801,6 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             jsonObject.put("record", score.score);
         }
         historyArray.add(newHistory);
-
-        System.out.println(historyArray);
 
         jsonHelper.writeJsonToFile(jsonObject);
     }

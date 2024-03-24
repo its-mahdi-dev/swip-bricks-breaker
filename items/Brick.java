@@ -29,9 +29,9 @@ public class Brick extends Rectangle {
         this.finalScore = score;
         Random random = new Random();
         int randomNumber = random.nextInt(101);
-        if (randomNumber % GamePanel.maxBrickGeneration + 5 == 0) {
+        if (randomNumber % GamePanel.maxBrickGeneration + 3 == 0) {
             this.specialItem = "color";
-        } else if (randomNumber % GamePanel.maxBrickGeneration + 5 == 0) {
+        } else if (randomNumber % GamePanel.maxBrickGeneration + 4 == 0) {
             this.specialItem = "earthQuake";
             System.out.println("earth");
         } else if (randomNumber % GamePanel.maxBrickGeneration + 5 == 0) {
