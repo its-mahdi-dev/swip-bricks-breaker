@@ -9,12 +9,14 @@ public class Ball extends Rectangle {
     public double xVelocity;
     public double yVelocity;
     public boolean isMoving;
+    Color color;
 
     Random random;
     public int speed = 10;
 
-    public Ball(int x, int y, int WIDTH, int HEIGHT) {
+    public Ball(int x, int y, int WIDTH, int HEIGHT, Color color) {
         super(x, y, WIDTH, HEIGHT);
+        this.color = color;
         random = new Random();
         int randomXDirection = random.nextInt(2);
         if (randomXDirection == 0) {
@@ -47,7 +49,7 @@ public class Ball extends Rectangle {
     }
 
     public void draw(Graphics g) {
-        g.setColor(Color.black);
+        g.setColor(color);
         g.fillOval(x, y, width, height);
 
     }

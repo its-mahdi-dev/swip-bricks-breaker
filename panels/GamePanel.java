@@ -28,7 +28,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     static final int BRICK_HEIGHT = 40;
     Thread gameThread;
     private ScheduledExecutorService brickExecutor = Executors.newSingleThreadScheduledExecutor();
-    private double brickMoveSpeed = 0.1;
+    private int brickMoveSpeed = 100;
     private boolean isBrickExecutorRunning = false;
     Graphics graphics;
     public int ball_count = 0;
@@ -65,6 +65,12 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private boolean gameStarted = false;
     JButton startButton;
     private GameReadyPanel readyPanel;
+    public static int maxBrickGeneration = 5;
+
+    // game settings
+    Color ballColor;
+    String level;
+    String playerName;
 
     public GamePanel(CardLayout cardLayout, JPanel panel) {
         this.cardLayout = cardLayout;
@@ -79,21 +85,42 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     public void readyGame() {
         readyPanel = new GameReadyPanel();
         readyPanel.setStartButtonClickListener(this);
-        readyPanel.setBounds(20, 0, MainPage.GAME_WIDTH - 40, MainPage.GAME_HEIGHT - 120); // Adjust position and size
+        readyPanel.setBounds(20, 0, MainPage.GAME_WIDTH - 40, MainPage.GAME_HEIGHT - 120);
         this.add(readyPanel);
     }
 
     @Override
     public void onStartButtonClicked(String level, Color color, String name) {
-        // This method will be called when the start button is clicked
-        // Perform actions accordingly
-        System.out.println("Start button: " + level + ", color: " + color + ", name: " + name);
+        playerName = name;
+        ballColor = color;
+        this.level = level;
+        setGameLevel(level);
+        startGame();
+    }
+
+    private void setGameLevel(String level) {
+        switch (level) {
+            case "Easy":
+                brickMoveSpeed = 120;
+                maxBrickGeneration = 3;
+                break;
+            case "Medium":
+                brickMoveSpeed = 100;
+                maxBrickGeneration = 5;
+                break;
+            case "Hard":
+                brickMoveSpeed = 80;
+                maxBrickGeneration = 7;
+                break;
+            default:
+                break;
+        }
     }
 
     private void startMovingBricks() {
         if (!isBrickExecutorRunning) {
             brickExecutor = Executors.newSingleThreadScheduledExecutor();
-            brickExecutor.scheduleAtFixedRate(this::moveBricksDown, 0, 100, TimeUnit.MILLISECONDS);
+            brickExecutor.scheduleAtFixedRate(this::moveBricksDown, 0, brickMoveSpeed, TimeUnit.MILLISECONDS);
             isBrickExecutorRunning = true;
         }
     }
@@ -108,7 +135,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     public void newBall() {
         balls.add(
                 new Ball((GAME_WIDTH / 2) - (BALL_DIAMETER / 2), (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                        BALL_DIAMETER));
+                        BALL_DIAMETER, ballColor));
     }
 
     public void newbrick() {
@@ -181,17 +208,17 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     }
 
     public void startGame() {
-        startButton.setVisible(false);
-        stopGame(); // Stop the current game if running
-        resetGame(); // Reset game state
+        readyPanel.setVisible(false);
+        stopGame();
+        resetGame();
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
         newBall();
         generateRandomBrick();
         generateItemBall();
         mouseAdapter = new AL(balls, 10);
         this.addMouseListener(mouseAdapter);
-        gameThread = new Thread(this); // Create a new game thread
-        gameThread.start(); // Start the new game thread
+        gameThread = new Thread(this);
+        gameThread.start();
         mousePosition = new Point(0, 0);
         this.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
@@ -266,11 +293,10 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
 
     private void generateRandomBrick() {
         generatedXPositions = new ArrayList<>();
-        int random = (int) (Math.random() * 7);
+        int random = (int) (Math.random() * maxBrickGeneration);
         if (random == 0) {
             random++;
         }
-        System.out.println("generated: " + random);
         for (int i = 0; i < random; i++) {
             int brickX = (int) (Math.random() * 8) * BRICK_WIDTH;
             while (generatedXPositions.contains(brickX)) {
@@ -280,9 +306,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             int brickY = 50;
             bricks.add(new Brick(brickX, brickY, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
                     GameSetting.generateRandomColor(), brickScore));
-            System.out.println("gen-> x: " + brickX + " y: " + brickY);
         }
-        System.out.println("--------------");
 
     }
 
@@ -307,11 +331,11 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         generatedXPositions.add(itemBallX);
         itemBallX += BRICK_WIDTH / 2 - 10;
         int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
-        if (score.time % 6 == 0) {
+        if (score.time % maxBrickGeneration + 1 == 0) {
             itemSpeeds.add(new ItemSpeed(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % 5 == 0) {
+        } else if (score.time % maxBrickGeneration == 0) {
             itemPowers.add(new ItemPower(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % 7 == 0) {
+        } else if (score.time % maxBrickGeneration + 2 == 0) {
             itemConfuseds.add(new ItemConfused(itemBallX, itemBallY, 20, 20));
         }
     }
@@ -556,7 +580,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
                             "x: " + bricks.get(i).x + " y: " + bricks.get(i).y + " score: " + bricks.get(i).score);
                 }
                 System.out.println("count: " + bricks.size());
-                brickScore += (int) (Math.random() * 10);
+                brickScore += (int) (Math.random() * maxBrickGeneration);
                 startMovingBricks();
                 brickDownDY = BRICK_HEIGHT;
                 moveBricksDown();
@@ -565,11 +589,11 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
                 generateOtherItems();
                 balls.add(
                         new Ball(finalX, (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                                BALL_DIAMETER));
+                                BALL_DIAMETER, ballColor));
                 if (addBall) {
                     balls.add(
                             new Ball(finalX, (GAME_HEIGHT) - (BALL_DIAMETER), BALL_DIAMETER,
-                                    BALL_DIAMETER));
+                                    BALL_DIAMETER, ballColor));
                     addBall = false;
                 }
             }

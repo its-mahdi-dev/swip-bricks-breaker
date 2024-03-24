@@ -7,6 +7,8 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.Random;
 
+import panels.GamePanel;
+
 public class Brick extends Rectangle {
 
     static int GAME_WIDTH;
@@ -27,12 +29,12 @@ public class Brick extends Rectangle {
         this.finalScore = score;
         Random random = new Random();
         int randomNumber = random.nextInt(101);
-        if (randomNumber % 7 == 0) {
+        if (randomNumber % GamePanel.maxBrickGeneration + 5 == 0) {
             this.specialItem = "color";
-        } else if (randomNumber % 8 == 0) {
+        } else if (randomNumber % GamePanel.maxBrickGeneration + 5 == 0) {
             this.specialItem = "earthQuake";
             System.out.println("earth");
-        } else if (randomNumber % 11 == 0) {
+        } else if (randomNumber % GamePanel.maxBrickGeneration + 5 == 0) {
             this.specialItem = "bomb";
         }
     }
