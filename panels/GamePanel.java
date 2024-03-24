@@ -18,6 +18,8 @@ import settings.GameSetting;
 
 public class GamePanel extends JPanel implements Runnable {
 
+    CardLayout cardLayout;
+    JPanel panel;
     static final int GAME_HEIGHT = 700;
     static final int GAME_WIDTH = 560;
     static final Dimension SCREEN_SIZE = new Dimension(GAME_WIDTH, GAME_HEIGHT);
@@ -35,7 +37,7 @@ public class GamePanel extends JPanel implements Runnable {
     List<Brick> bricks = new ArrayList<>();
     public AL mouseAdapter;
     private Score score;
-    private Point mousePosition;
+    private Point mousePosition = new Point(0, 0);
     Brick removeBrick;
     boolean isMoving = false;
     Integer finalX = null;
@@ -60,29 +62,24 @@ public class GamePanel extends JPanel implements Runnable {
     Integer colorTimer;
     Integer earthQuakeTimer;
     int count = 0;
+    private boolean gameStarted = false;
 
-    public GamePanel() {
-        score = new Score(GAME_WIDTH, GAME_HEIGHT);
-        newBall();
-        generateRandomBrick();
-        generateItemBall();
-        this.setFocusable(true);
-        mouseAdapter = new AL(balls, 10);
-        this.addMouseListener(mouseAdapter);
-        this.setPreferredSize(SCREEN_SIZE);
-        mousePosition = new Point(0, 0);
-        this.addMouseMotionListener(new MouseMotionAdapter() {
+    public GamePanel(CardLayout cardLayout, JPanel panel) {
+        this.cardLayout = cardLayout;
+        this.panel = panel;
+        JButton starButton = new JButton("start game");
+        starButton.setBounds(GAME_WIDTH / 2 - 100, 20, 200, 50);
+        starButton.addActionListener(new ActionListener() {
             @Override
-            public void mouseMoved(MouseEvent e) {
-                mousePosition = e.getPoint();
-                repaint();
+            public void actionPerformed(ActionEvent e) {
+                startGame();
             }
         });
-        gameThread = new Thread(this);
-        gameThread.start();
+        this.add(starButton);
+        this.setFocusable(true);
 
-        startMovingBricks();
-
+        setPreferredSize(new Dimension(MainPage.GAME_WIDTH, MainPage.GAME_HEIGHT));
+        setLayout(null);
     }
 
     private void startMovingBricks() {
@@ -136,12 +133,14 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    public void paint(Graphics g) {
-        Image image = createImage(getWidth(), getHeight());
-        graphics = image.getGraphics();
-        draw(graphics);
-        g.drawImage(image, 0, 0, this);
-    }
+    // public void paint(Graphics g) {
+
+    // Image image = createImage(getWidth(), getHeight());
+    // graphics = image.getGraphics();
+    // if (gameStarted)
+    // draw(graphics);
+    // g.drawImage(image, 0, 0, this);
+    // }
 
     public void draw(Graphics g) {
         List<Ball> copyOfBalls = new ArrayList<>(balls); // Create a copy of the balls list
@@ -171,6 +170,58 @@ public class GamePanel extends JPanel implements Runnable {
             g.drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
         }
 
+    }
+
+    public void startGame() {
+
+        stopGame(); // Stop the current game if running
+        resetGame(); // Reset game state
+        score = new Score(GAME_WIDTH, GAME_HEIGHT);
+        newBall();
+        generateRandomBrick();
+        generateItemBall();
+        mouseAdapter = new AL(balls, 10);
+        this.addMouseListener(mouseAdapter);
+        gameThread = new Thread(this); // Create a new game thread
+        gameThread.start(); // Start the new game thread
+        mousePosition = new Point(0, 0);
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                mousePosition = e.getPoint();
+                repaint();
+            }
+        });
+        startMovingBricks();
+        gameStarted = true;
+    }
+
+    // Method to stop the game thread
+    public void stopGame() {
+        if (gameThread != null && gameThread.isAlive()) {
+            gameThread.interrupt(); // Interrupt the current game thread
+            try {
+                gameThread.join(); // Wait for the thread to finish gracefully
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            gameThread = null; // Set the thread reference to null
+        }
+    }
+
+    // Method to reset game state
+    public void resetGame() {
+        // Clear any game elements (balls, bricks, etc.)
+        if (score != null)
+            score.reset();
+        balls.clear();
+        bricks.clear();
+        itemBalls.clear();
+        itemSpeeds.clear();
+        itemPowers.clear();
+        itemConfuseds.clear();
+
+        // Other game state reset operations...
     }
 
     public void move() {
@@ -552,6 +603,7 @@ public class GamePanel extends JPanel implements Runnable {
                 Random random = new Random();
                 selectedX = random.nextInt(GAME_WIDTH - 10) + 5;
                 selectedY = random.nextInt(GAME_HEIGHT - 30) + 100;
+                isConfused = false;
             }
             int ballX = balls.get(0).x + balls.get(0).width / 2;
             int ballY = balls.get(0).y + balls.get(0).height / 2;
@@ -584,22 +636,13 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
-    // @Override
-    // protected void paintComponent(Graphics g) {
-    // super.paintComponent(g);
-
-    // for (Ball ball : balls) {
-    // ball.draw(g);
-    // }
-
-    // for (Ball ball : balls) {
-    // int ballCenterX = ball.x + ball.width / 2;
-    // int ballCenterY = ball.y + ball.height / 2;
-
-    // if (mousePosition.y < GAME_HEIGHT - 50) {
-    // // g drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
-    // }
-    // }
-    // }
-
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Image image = createImage(getWidth(), getHeight());
+        graphics = image.getGraphics();
+        if (gameStarted)
+            draw(graphics);
+        g.drawImage(image, 0, 0, this);
+    }
 }

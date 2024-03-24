@@ -19,6 +19,11 @@ public class Score extends Rectangle {
         Score.GAME_HEIGHT = GAME_HEIGHT;
     }
 
+    public void reset(){
+        score = 1;
+        time = 0;
+    }
+
     public static String convertSecondsToTime(int totalSeconds) {
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
