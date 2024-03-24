@@ -14,7 +14,7 @@ public class ItemReversed extends Rectangle {
 
     public void draw(Graphics g) {
         g.fillOval(x, y, width, height);
-        Image image = new ImageIcon("images/reversed.png").getImage();
+        Image image = new ImageIcon("images/reverse.png").getImage();
         g.drawImage(image, x, y, width, height, null);
     }
 }

@@ -133,7 +133,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void setGameLevel(String level) {
         switch (level) {
             case "Easy":
-                brickMoveSpeed = 10;
+                brickMoveSpeed = 120;
                 maxBrickGeneration = 3;
                 break;
             case "Medium":
@@ -212,31 +212,43 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     // }
 
     public void draw(Graphics g) {
-        List<Ball> copyOfBalls = new ArrayList<>(balls); // Create a copy of the balls list
+        List<Ball> copyOfBalls = new ArrayList<>(balls);
         for (Ball ball : copyOfBalls) {
             ball.draw(g);
         }
         for (int i = 0; i < bricks.size(); i++) {
-            bricks.get(i).draw(g);
+            if (bricks.get(i).y >= 50)
+                bricks.get(i).draw(g);
         }
         score.draw(g);
         for (ItemBall itemBall : itemBalls) {
-            itemBall.draw(g);
+            if (itemBall.y >= 50)
+                itemBall.draw(g);
         }
         for (ItemSpeed itemSpeed : itemSpeeds) {
-            itemSpeed.draw(g);
+            if (itemSpeed.y >= 50)
+                itemSpeed.draw(g);
         }
         for (ItemPower itemPower : itemPowers) {
-            itemPower.draw(g);
+            if (itemPower.y >= 50)
+                itemPower.draw(g);
         }
         for (ItemConfused itemConfused : itemConfuseds) {
-            itemConfused.draw(g);
+            if (itemConfused.y >= 50)
+                itemConfused.draw(g);
         }
         for (ItemReversed itemReversed : itemReverseds) {
-            itemReversed.draw(g);
+            if (itemReversed.y >= 50)
+                itemReversed.draw(g);
         }
-        if (extraHealthItem != null)
-            extraHealthItem.draw(g);
+        if (extraHealthItem != null) {
+            if (extraHealthItem.y >= 50)
+                extraHealthItem.draw(g);
+        }
+        if (extraHealth) {
+            Image extraHealthImage = new ImageIcon("images/health.png").getImage();
+            g.drawImage(extraHealthImage, GAME_WIDTH - 100, 10, 30, 30, null);
+        }
         if (!isMoving && mousePosition.y < GAME_HEIGHT - 50 && mousePosition.y >= 50) {
             Ball ball = balls.get(0);
             int ballCenterX = ball.x + ball.width / 2;
@@ -412,14 +424,13 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         int itemBallY = 50 + BRICK_HEIGHT / 2 - 10;
         if (score.time % maxBrickGeneration + 1 == 0) {
             itemSpeeds.add(new ItemSpeed(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % maxBrickGeneration + 4 == 0) {
+        } else if (score.time % maxBrickGeneration + 3 == 0) {
             itemPowers.add(new ItemPower(itemBallX, itemBallY, 20, 20));
         } else if (score.time % maxBrickGeneration + 2 == 0) {
             itemConfuseds.add(new ItemConfused(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % maxBrickGeneration + 3 == 0) {
+        } else if (score.time % maxBrickGeneration + 4 == 0) {
             itemReverseds.add(new ItemReversed(itemBallX, itemBallY, 20, 20));
-        } else if (score.time % maxBrickGeneration - 1 == 0 && !isExtraHealthAble) {
-            System.out.println("health");
+        } else if (score.time % maxBrickGeneration + 6 == 0 && !isExtraHealthAble) {
             extraHealthItem = new ItemHealth(itemBallX, itemBallY, 20, 20);
         }
     }
@@ -655,7 +666,12 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             if (ball.x + BALL_DIAMETER >= itemReversed.x && ball.x <= itemReversed.x + 20
                     && ball.y + BALL_DIAMETER >= itemReversed.y
                     && ball.y <= itemReversed.y + 20) {
-
+                if (removedItemReversed == null) {
+                    for (Brick br : bricks) {
+                        br.y -= BRICK_HEIGHT * 2;
+                    }
+                    removedItemReversed = itemReversed;
+                }
             }
         }
         if (removedItemReversed != null) {
