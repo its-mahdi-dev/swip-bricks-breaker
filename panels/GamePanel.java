@@ -401,8 +401,22 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
 
     private void setBombItem(Brick brick) {
         List<Brick> bricksAround = GameSetting.getBricksAround(brick, bricks);
+        playBoomSound();
         for (Brick b : bricksAround) {
             b.score -= 50;
+        }
+
+    }
+
+    private void playBoomSound() {
+        try {
+            File soundFile = new File("assets/bomb.wav");
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioIn);
+            clip.start();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
