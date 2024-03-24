@@ -83,8 +83,7 @@ public class GameMenu extends JPanel {
         exitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cardLayout.show(panel, "game");
-                System.out.println("Switching to game panel");
+                System.exit(0);
             }
         });
         buttons.put("exit", exitButton);

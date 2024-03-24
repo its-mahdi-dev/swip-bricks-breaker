@@ -1,5 +1,5 @@
 {
-  "record": 5,
+  "record": 11,
   "history": [
     { "date": "5/8/44", "record": 324, "name": "player2", "time": "7:80" },
     {
@@ -20,6 +20,9 @@
       "name": "",
       "time": "21:24:52.388656700"
     },
-    { "date": "2024-03-24", "record": 5, "name": "dsa", "time": "21:29:58" }
+    { "date": "2024-03-24", "record": 5, "name": "dsa", "time": "21:29:58" },
+    { "date": "2024-03-24", "record": 1, "name": "", "time": "21:34:44" },
+    { "date": "2024-03-24", "record": 11, "name": "", "time": "21:45:32" },
+    { "date": "2024-03-24", "record": 1, "name": "", "time": "23:19:17" }
   ]
 }

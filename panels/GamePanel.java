@@ -1,5 +1,11 @@
 package panels;
 
+import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 
 import org.json.simple.JSONArray;
@@ -9,6 +15,9 @@ import Data.JsonHelper;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -16,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -76,18 +86,24 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     JButton startButton;
     private GameReadyPanel readyPanel;
     public static int maxBrickGeneration = 5;
-
+    private Clip clip;
     // game settings
     Color ballColor;
     String level;
     String playerName;
+    boolean gamePause;
+    JButton pauseResume = new JButton("pause");
+    Image pauseResumeImage;
+    Map<String, Integer> pauseInfo = Map.of(
+            "x", 10, "y", 10, "width", 30, "height", 30);
 
     public GamePanel(CardLayout cardLayout, JPanel panel) {
         this.cardLayout = cardLayout;
         this.panel = panel;
 
         this.setLayout(null);
-        this.setFocusable(true);
+        this.setFocusable(
+                true);
         readyGame(); // Initialize the ready panel
         setPreferredSize(new Dimension(MainPage.GAME_WIDTH, MainPage.GAME_HEIGHT));
     }
@@ -111,7 +127,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void setGameLevel(String level) {
         switch (level) {
             case "Easy":
-                brickMoveSpeed = 4;
+                brickMoveSpeed = 120;
                 maxBrickGeneration = 3;
                 break;
             case "Medium":
@@ -170,7 +186,9 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
             delta += (now - lastTime) / ns;
             lastTime = now;
             if (delta >= 1) {
-                move();
+                if (!gamePause) {
+                    move();
+                }
                 checkCollision();
                 repaint();
                 delta--;
@@ -208,13 +226,29 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         for (ItemConfused itemConfused : itemConfuseds) {
             itemConfused.draw(g);
         }
-        if (!isMoving && mousePosition.y < GAME_HEIGHT - 50) {
+
+        if (!isMoving && mousePosition.y < GAME_HEIGHT - 50 && mousePosition.y >= 50) {
             Ball ball = balls.get(0);
             int ballCenterX = ball.x + ball.width / 2;
             int ballCenterY = ball.y + ball.height / 2;
             g.drawLine(ballCenterX, ballCenterY, mousePosition.x, mousePosition.y);
         }
 
+        if (gamePause)
+            pauseResumeImage = new ImageIcon("images/resume.png").getImage();
+        else
+            pauseResumeImage = new ImageIcon("images/pause.png").getImage();
+        g.drawImage(pauseResumeImage, pauseInfo.get("x"), pauseInfo.get("y"), pauseInfo.get("width"),
+                pauseInfo.get("height"), null);
+
+    }
+
+    private void pauseGame() {
+        stopMovingBricks();
+    }
+
+    private void resumeGame() {
+        startMovingBricks();
     }
 
     public void startGame() {
@@ -239,6 +273,19 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
         });
         startMovingBricks();
         gameStarted = true;
+        playMusic();
+    }
+
+    private void playMusic() {
+        try {
+            File musicFile = new File("assets/background1.wav");
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicFile);
+            clip = AudioSystem.getClip();
+            clip.open(audioInput);
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException ex) {
+            ex.printStackTrace();
+        }
     }
 
     // Method to stop the game thread
@@ -617,14 +664,17 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
 
     public void checkCollision() {
         count = 0;
-        checkItemsTimer();
-        checkBalls();
-        checkBallMoving();
+        if (!gamePause) {
+            checkItemsTimer();
+            checkBalls();
+            checkBallMoving();
+        }
         if (timer == null) {
             timer = new Timer(1000, new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    score.time++;
+                    if (!gamePause)
+                        score.time++;
                 }
             });
         }
@@ -652,6 +702,8 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
                 cardLayout.show(panel, "menu");
                 break;
             default:
+                resetGame();
+                cardLayout.show(panel, "menu");
                 break;
         }
 
@@ -717,12 +769,25 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
 
         @Override
         public void mousePressed(MouseEvent e) {
-            if (!isMoving) {
-                if (e.getY() < GAME_HEIGHT - 50) {
+            if (e.getY() < GAME_HEIGHT - 50 && e.getY() >= 50) {
+
+                if (!isMoving) {
                     setDirection(e.getX(), e.getY());
                     isMoving = true;
                     finalX = null;
                     stopMovingBricks();
+                }
+            } else {
+                if (e.getX() >= pauseInfo.get("x") && e.getX() <= pauseInfo.get("x") +
+                        pauseInfo.get("width")
+                        && e.getY() >= pauseInfo.get("y")
+                        && e.getY() <= pauseInfo.get("y") + pauseInfo.get("height")) {
+                    gamePause = !gamePause;
+                    if (gamePause) {
+                        pauseGame();
+                    } else {
+                        resumeGame();
+                    }
                 }
             }
         }
