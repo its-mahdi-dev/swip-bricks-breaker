@@ -6,6 +6,9 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class GameMenu extends JPanel {
     CardLayout cardLayout;
@@ -13,6 +16,7 @@ public class GameMenu extends JPanel {
     Graphics graphics;
     JPanel contentPanel;
     GridBagConstraints gbc;
+    Map<String, JButton> buttons = new LinkedHashMap<>();
 
     public GameMenu(CardLayout cardLayout, JPanel panel) {
         this.cardLayout = cardLayout;
@@ -39,13 +43,7 @@ public class GameMenu extends JPanel {
         gbc.gridx = 0;
         gbc.gridy++;
         JButton starButton = new JButton("Start New Game");
-        starButton.setFont(new Font("Arial", Font.BOLD, 20));
-        starButton.setFocusable(false);
         starButton.setBackground(Color.green);
-        starButton.setPreferredSize(new Dimension(300, 50));
-        starButton.setForeground(Color.white);
-        Border border = BorderFactory.createLineBorder(Color.black, 3);
-        starButton.setBorder(border);
         starButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -53,60 +51,54 @@ public class GameMenu extends JPanel {
                 System.out.println("Switching to game panel");
             }
         });
-        contentPanel.add(starButton, gbc);
+        buttons.put("start", starButton);
+
 
         JButton historyButton = new JButton("Game History");
-        historyButton.setFont(new Font("Arial", Font.BOLD, 20));
-        historyButton.setFocusable(false);
         historyButton.setBackground(Color.blue);
-        historyButton.setPreferredSize(new Dimension(300, 50));
-        historyButton.setForeground(Color.white);
-        Border historyBorder = BorderFactory.createLineBorder(Color.black, 3);
-        historyButton.setBorder(historyBorder);
         historyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cardLayout.show(panel, "history");
+                cardLayout.show(panel, "game");
                 System.out.println("Switching to game panel");
             }
         });
-        gbc.gridy++;
-        contentPanel.add(historyButton, gbc);
+        buttons.put("history", historyButton);
 
         JButton settingsButton = new JButton("Game settings");
-        settingsButton.setFont(new Font("Arial", Font.BOLD, 20));
-        settingsButton.setFocusable(false);
-        settingsButton.setBackground(Color.gray);
-        settingsButton.setPreferredSize(new Dimension(300, 50));
-        settingsButton.setForeground(Color.white);
-        Border settingsBorder = BorderFactory.createLineBorder(Color.black, 3);
-        settingsButton.setBorder(settingsBorder);
+        settingsButton.setBackground(Color.cyan);
         settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cardLayout.show(panel, "settings");
+                cardLayout.show(panel, "game");
                 System.out.println("Switching to game panel");
             }
         });
-        gbc.gridy++;
-        contentPanel.add(settingsButton, gbc);
+        buttons.put("settings", settingsButton);
 
         JButton exitButton = new JButton("Game exit");
-        exitButton.setFont(new Font("Arial", Font.BOLD, 20));
-        exitButton.setFocusable(false);
         exitButton.setBackground(Color.red);
-        exitButton.setPreferredSize(new Dimension(300, 50));
-        exitButton.setForeground(Color.white);
-        Border exitBorder = BorderFactory.createLineBorder(Color.black, 3);
-        exitButton.setBorder(exitBorder);
         exitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+                cardLayout.show(panel, "game");
+                System.out.println("Switching to game panel");
             }
         });
-        gbc.gridy++;
-        contentPanel.add(exitButton, gbc);
+        buttons.put("exit", exitButton);
+
+        for (Map.Entry<String, JButton> button : buttons.entrySet()) {
+            button.getValue().setFont(new Font("Arial", Font.BOLD, 20));
+            button.getValue().setFocusable(false);
+            button.getValue().setPreferredSize(new Dimension(300, 50));
+            button.getValue().setForeground(Color.white);
+            Border border = BorderFactory.createLineBorder(Color.black, 3);
+            button.getValue().setBorder(border);
+            gbc.gridx = 0;
+            gbc.gridy++;
+            gbc.insets = new Insets(10, 5, 5, 5);
+            contentPanel.add(button.getValue(), gbc);
+        }
 
     }
 
