@@ -16,7 +16,7 @@ import items.*;
 import panels.GamePanel.AL;
 import settings.GameSetting;
 
-public class GamePanel extends JPanel implements Runnable {
+public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartButtonClickListener {
 
     CardLayout cardLayout;
     JPanel panel;
@@ -63,24 +63,31 @@ public class GamePanel extends JPanel implements Runnable {
     Integer earthQuakeTimer;
     int count = 0;
     private boolean gameStarted = false;
-    JButton starButton;
+    JButton startButton;
+    private GameReadyPanel readyPanel;
 
     public GamePanel(CardLayout cardLayout, JPanel panel) {
         this.cardLayout = cardLayout;
         this.panel = panel;
-        starButton = new JButton("start game");
-        starButton.setBounds(GAME_WIDTH / 2 - 100, 20, 200, 50);
-        starButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startGame();
-            }
-        });
-        this.add(starButton);
-        this.setFocusable(true);
 
+        this.setLayout(null);
+        this.setFocusable(true);
+        readyGame(); // Initialize the ready panel
         setPreferredSize(new Dimension(MainPage.GAME_WIDTH, MainPage.GAME_HEIGHT));
-        setLayout(null);
+    }
+
+    public void readyGame() {
+        readyPanel = new GameReadyPanel();
+        readyPanel.setStartButtonClickListener(this);
+        readyPanel.setBounds(20, 0, MainPage.GAME_WIDTH - 40, MainPage.GAME_HEIGHT - 120); // Adjust position and size
+        this.add(readyPanel);
+    }
+
+    @Override
+    public void onStartButtonClicked(String level, Color color, String name) {
+        // This method will be called when the start button is clicked
+        // Perform actions accordingly
+        System.out.println("Start button: " + level + ", color: " + color + ", name: " + name);
     }
 
     private void startMovingBricks() {
@@ -174,7 +181,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void startGame() {
-        starButton.setVisible(false);
+        startButton.setVisible(false);
         stopGame(); // Stop the current game if running
         resetGame(); // Reset game state
         score = new Score(GAME_WIDTH, GAME_HEIGHT);
