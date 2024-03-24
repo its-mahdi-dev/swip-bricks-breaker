@@ -1,41 +1,25 @@
 {
-  "record": 550,
+  "record": 5,
   "history": [
+    { "date": "5/8/44", "record": 324, "name": "player2", "time": "7:80" },
     {
-      "record": 432,
-      "name": "player1",
-      "date": "5/8/54",
-      "time": "50:60"
+      "date": "2024-03-24",
+      "record": 1,
+      "name": "",
+      "time": "21:24:24.610389800"
     },
     {
-      "record": 324,
-      "name": "player2",
-      "date": "5/8/44",
-      "time": "7:80"
+      "date": "2024-03-24",
+      "record": 4,
+      "name": "",
+      "time": "21:24:52.371078400"
     },
     {
-      "record": 324,
-      "name": "player2",
-      "date": "5/8/44",
-      "time": "7:80"
+      "date": "2024-03-24",
+      "record": 4,
+      "name": "",
+      "time": "21:24:52.388656700"
     },
-    {
-      "record": 324,
-      "name": "player2",
-      "date": "5/8/44",
-      "time": "7:80"
-    },
-    {
-      "record": 324,
-      "name": "player2",
-      "date": "5/8/44",
-      "time": "7:80"
-    },
-    {
-      "record": 324,
-      "name": "player2",
-      "date": "5/8/44",
-      "time": "7:80"
-    }
+    { "date": "2024-03-24", "record": 5, "name": "dsa", "time": "21:29:58" }
   ]
 }

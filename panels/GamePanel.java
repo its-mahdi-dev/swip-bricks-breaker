@@ -1,8 +1,18 @@
 package panels;
 
 import javax.swing.*;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import Data.JsonHelper;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -431,7 +441,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void checkBricks(Ball ball) {
         for (int j = 0; j < bricks.size(); j++) {
             Brick brick = bricks.get(j);
-            if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT) {
+            if (brick.y + BRICK_HEIGHT >= GAME_HEIGHT && gameStarted) {
                 GameOver();
             }
             // boolean checkX = ball.x + BALL_DIAMETER >= brick.x && ball.x <= brick.x +
@@ -624,6 +634,7 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
     private void GameOver() {
         gameStarted = false;
         stopGame();
+        writeHistory();
         String[] options = new String[] { "start again", "back ro ready page", "back to menu" };
         String option = options[JOptionPane.showOptionDialog(panel, "sorry, Game over", "finished",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -644,6 +655,28 @@ public class GamePanel extends JPanel implements Runnable, GameReadyPanel.StartB
                 break;
         }
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private void writeHistory() {
+        JsonHelper jsonHelper = new JsonHelper("Data/history.json");
+        JSONObject jsonObject = jsonHelper.readJsonFromFile();
+
+        JSONObject newHistory = new JSONObject();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        newHistory.put("time", LocalTime.now().format(formatter).toString());
+        newHistory.put("record", score.score);
+        newHistory.put("name", playerName);
+        newHistory.put("date", LocalDate.now().toString());
+        JSONArray historyArray = (JSONArray) jsonObject.get("history");
+        if (score.score > Integer.parseInt(jsonObject.get("record").toString())) {
+            jsonObject.put("record", score.score);
+        }
+        historyArray.add(newHistory);
+
+        System.out.println(historyArray);
+
+        jsonHelper.writeJsonToFile(jsonObject);
     }
 
     public class AL extends MouseAdapter {
