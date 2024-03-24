@@ -207,17 +207,23 @@ public class GamePanel extends JPanel implements Runnable {
 
     private void generateRandomBrick() {
         generatedXPositions = new ArrayList<>();
-        int random = (int) (Math.random() * 8);
+        int random = (int) (Math.random() * 7);
         if (random == 0) {
             random++;
         }
+        System.out.println("generated: " + random);
         for (int i = 0; i < random; i++) {
             int brickX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            while (generatedXPositions.contains(brickX)) {
+                brickX = (int) (Math.random() * 8) * BRICK_WIDTH;
+            }
             generatedXPositions.add(brickX);
             int brickY = 50;
             bricks.add(new Brick(brickX, brickY, GAME_WIDTH, GAME_HEIGHT, BRICK_WIDTH, BRICK_HEIGHT,
                     GameSetting.generateRandomColor(), brickScore));
+            System.out.println("gen-> x: " + brickX + " y: " + brickY);
         }
+        System.out.println("--------------");
 
     }
 
@@ -486,6 +492,11 @@ public class GamePanel extends JPanel implements Runnable {
     private void checkBallMoving() {
         if (count == balls.size()) {
             if (isMoving) {
+                for (int i = 0; i < bricks.size(); i++) {
+                    System.out.println(
+                            "x: " + bricks.get(i).x + " y: " + bricks.get(i).y + " score: " + bricks.get(i).score);
+                }
+                System.out.println("count: " + bricks.size());
                 brickScore += (int) (Math.random() * 10);
                 startMovingBricks();
                 brickDownDY = BRICK_HEIGHT;
